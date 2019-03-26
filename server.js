@@ -16,10 +16,10 @@ let fs = require('fs');
 
 var data = "New File Contents1";
 
-fs.appendFile("temp.txt", data, function(err, data) {
-  if (err) console.log(err);
-  console.log("Successfully Written to File.");
-});
+// fs.appendFile("temp.txt", data, function(err, data) {
+//   if (err) console.log(err);
+//   console.log("Successfully Written to File.");
+// });
 
 /*--------creates a connection for data to be sent and recieved--------*/
 io.sockets.on('connection', newConnection);
