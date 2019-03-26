@@ -17,9 +17,24 @@ let counter;
 
 let playButton;
 
+let presets;
+
 /////////////////////////////////////
 //              INIT               //
 /////////////////////////////////////
+function preLoad(){
+  presets = loadJSON('presets.json')
+  console.log(presets)
+}
+
+let presetDropdown;
+let presetDropdownContentDiv;
+
+let presetButtons = [];
+let presetLength;
+
+let saveButton;
+
 function setup() {
   
   polySequencer = new StepSequencer();
@@ -35,6 +50,31 @@ function setup() {
   // cnv.touchStarted(function(event) {event.preventDefault()});
   // cnv.touchMoved(function(event) {event.preventDefault()});
   // cnv.touchEnded(function(event) {event.preventDefault()});
+
+  /*CREATES THE PRESET PARAMETERS*/
+  presetLength = Object.keys(presets).length;
+  
+  presetDropdown = createButton("presets");
+  presetDropdown.id("dropbtn");
+  presetDropdown.parent("dropdown")
+  presetDropdown.position(0, 360)
+  
+  presetDropdownContentDiv = createDiv();
+  presetDropdownContentDiv.id("dropdown-content")
+  presetDropdownContentDiv.parent("dropbtn");
+
+  for (let i = 0; i < presetLength; i++) {
+    presetButtons[i] = createButton(i + 1);
+  //  presetButtons[i].position(i * 30, 0)
+    presetButtons[i].id(i + 1)
+    presetButtons[i].mousePressed(setPresets);
+    presetButtons[i].parent("dropdown-content");
+  }
+
+  saveButton = createButton("Save Preset")
+  saveButton.id("savebtn")
+  saveButton.mousePressed(savePreset)
+  saveButton.position(282, 360)
 
   playButton = createButton('play');
   playButton.class('playButtons');
@@ -270,6 +310,47 @@ class StepSequencer {
 function filterUndefined(value) {
   return value !== undefined;
 }
+
+
+/////////////////////////////////////
+//          SETS PRESETS           //
+/////////////////////////////////////
+function setPresets() {
+  //check the buttons id, whatever id it has is the preset it needs to select
+  let myID = event.srcElement.id
+  let whichButton = presets[myID]
+
+  let setSequence = whichButton.polyMatrix
+
+  polySequencer.polyMatrix = setSequence
+
+  redSlider.value(redSliderValue);
+}
+
+/////////////////////////////////////
+//          SAVES PRESETS           //
+/////////////////////////////////////
+
+function savePreset() {
+  presetLength = Object.keys(presets).length
+  let newKey = presetLength + 1
+
+  /*Preset in dictonary format 
+  Loading it like this creates the new key*/
+  let newPreset = {
+      "polyMatrix": polySequencer.polyMatrix
+  }
+
+  if (confirm("Would you like to save your presets?")) {
+    presets[newKey] = newPreset;
+  }
+  presetButtons[presetLength] = createButton(presetLength + 1);
+ // presetButtons[presetLength].position(presetLength * 30, 0)
+  presetButtons[presetLength].id(presetLength + 1)
+  presetButtons[presetLength].mousePressed(setPresets);
+  presetButtons[presetLength].parent("dropdown-content");
+}
+
 
 /////////////////////////////////////
 //       MASTER PLAY BUTTON        //
