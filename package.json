@@ -1,0 +1,22 @@
+{
+  "name": "finalthesisdemocracy",
+  "version": "1.0.0",
+  "description": "Thesis Project: A collaborative music bot pointing to the potential of a more democratic society and saying that can be fought for now",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "max/msp",
+    "js",
+    "music",
+    "experimental"
+  ],
+  "author": "Gabe Berry",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^2.2.0"
+  }
+}
