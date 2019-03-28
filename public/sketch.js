@@ -319,8 +319,9 @@ function setPresets() {
   //check the buttons id, whatever id it has is the preset it needs to select
   let myID = event.srcElement.id;
   let whichButton = presets[myID];
-  
-  let setSequence = whichButton.sequence;
+
+  // deep clone an array of arrays
+  let setSequence = whichButton.sequence.map(i => ({...i}));
   
   polySequencer.polyMatrix = setSequence;
   
