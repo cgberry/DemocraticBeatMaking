@@ -4,6 +4,7 @@ let socket = io.connect('http://192.168.1.7:3000');
 /////////////////////////////////////
 //        GLOBAL VARIABLES         //
 /////////////////////////////////////
+
 let cnv;
 
 let loopBeat;
@@ -19,14 +20,6 @@ let playButton;
 
 let presets;
 
-/////////////////////////////////////
-//              INIT               //
-/////////////////////////////////////
-function preLoad(){
-  presets = loadJSON('presets.json')
-  console.log(presets)
-}
-
 let presetDropdown;
 let presetDropdownContentDiv;
 
@@ -35,8 +28,16 @@ let presetLength;
 
 let saveButton;
 
+/////////////////////////////////////
+//              INIT               //
+/////////////////////////////////////
+
+function preload(){
+  presets = loadJSON('presets');
+}
+
+
 function setup() {
-  
   polySequencer = new StepSequencer();
   
   cnv = createCanvas(600, 500);
@@ -56,25 +57,25 @@ function setup() {
   
   presetDropdown = createButton("presets");
   presetDropdown.id("dropbtn");
-  presetDropdown.parent("dropdown")
-  presetDropdown.position(0, 360)
+  presetDropdown.parent("dropdown");
+  presetDropdown.position(0, 450);
   
   presetDropdownContentDiv = createDiv();
-  presetDropdownContentDiv.id("dropdown-content")
+  presetDropdownContentDiv.id("dropdown-content");
   presetDropdownContentDiv.parent("dropbtn");
 
   for (let i = 0; i < presetLength; i++) {
     presetButtons[i] = createButton(i + 1);
   //  presetButtons[i].position(i * 30, 0)
-    presetButtons[i].id(i + 1)
+    presetButtons[i].id(i + 1);
     presetButtons[i].mousePressed(setPresets);
     presetButtons[i].parent("dropdown-content");
   }
 
-  saveButton = createButton("Save Preset")
-  saveButton.id("savebtn")
-  saveButton.mousePressed(savePreset)
-  saveButton.position(282, 360)
+  saveButton = createButton("Save Preset");
+  saveButton.id("savebtn");
+  saveButton.mousePressed(savePreset);
+  saveButton.position(310, 450);
 
   playButton = createButton('play');
   playButton.class('playButtons');
@@ -84,10 +85,8 @@ function setup() {
   
 	volumeSlider = createSlider(-100, 0, 0);
   volumeSlider.id("polyVolume");
-  volumeSlider.class('volume')
+  volumeSlider.class('volume');
   volumeSlider.position(400, 200);
-  
-	console.log(volumeSlider);
 
   polySequencer.drawMatrix();
 
@@ -193,7 +192,7 @@ class StepSequencer {
   this.yOffset = 40;
     
   /* Binds event listener fuctions to this? */   
-  this.lastCellState = 1
+  this.lastCellState = 1;
   this.mouseIsDragged = false;
     
   /* Binds event listener fuctions to this? */  
@@ -253,9 +252,9 @@ class StepSequencer {
 
 
     if (this.polyMatrix[rowClicked][columnClicked] === 1) {
-      this.lastCellState = 1
+      this.lastCellState = 1;
     } else if (this.polyMatrix[rowClicked][columnClicked] === 0) {
-      this.lastCellState = 0
+      this.lastCellState = 0;
     }
 
     cnv.mouseReleased = function() {
@@ -316,15 +315,17 @@ function filterUndefined(value) {
 //          SETS PRESETS           //
 /////////////////////////////////////
 function setPresets() {
+
   //check the buttons id, whatever id it has is the preset it needs to select
-  let myID = event.srcElement.id
-  let whichButton = presets[myID]
-
-  let setSequence = whichButton.polyMatrix
-
-  polySequencer.polyMatrix = setSequence
-
-  redSlider.value(redSliderValue);
+  let myID = event.srcElement.id;
+  let whichButton = presets[myID];
+  
+  let setSequence = whichButton.sequence;
+  
+  polySequencer.polyMatrix = setSequence;
+  
+  polySequencer.drawMatrix();
+  polySequencer.polyMatrixNotes();
 }
 
 /////////////////////////////////////
@@ -332,23 +333,24 @@ function setPresets() {
 /////////////////////////////////////
 
 function savePreset() {
-  presetLength = Object.keys(presets).length
-  let newKey = presetLength + 1
-
+  presetLength = Object.keys(presets).length;
+  let newKey = presetLength + 1;
+  console.log(newKey);
   /*Preset in dictonary format 
   Loading it like this creates the new key*/
   let newPreset = {
-      "polyMatrix": polySequencer.polyMatrix
-  }
+      "sequence": polySequencer.polyMatrix
+  };
 
   if (confirm("Would you like to save your presets?")) {
     presets[newKey] = newPreset;
   }
   presetButtons[presetLength] = createButton(presetLength + 1);
  // presetButtons[presetLength].position(presetLength * 30, 0)
-  presetButtons[presetLength].id(presetLength + 1)
+  presetButtons[presetLength].id(presetLength + 1);
   presetButtons[presetLength].mousePressed(setPresets);
   presetButtons[presetLength].parent("dropdown-content");
+  Tone.context.resume();
 }
 
 
@@ -357,9 +359,9 @@ function savePreset() {
 /////////////////////////////////////
 function playButtonPressed() {
   if (Tone.Master.mute) {
-    Tone.Master.mute = false
+    Tone.Master.mute = false;
   } else {
-    Tone.Master.mute = true
+    Tone.Master.mute = true;
   }
 }
 
@@ -370,7 +372,7 @@ function playButtonPressed() {
 document.documentElement.addEventListener(
   "mousedown",
   function() {
-    mouse_IsDown = true;
+   mouse_IsDown = true;
     if (Tone.context.state !== 'running') {
       Tone.context.resume();
     }
