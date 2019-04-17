@@ -35,10 +35,27 @@ io.sockets.on('connection', newConnection);
 
 function newConnection(socket){
     console.log ('new connection @ ', socket.id);
-    socket.on('track1', up);
+    socket.on('track1', savePreset);
 
-    function up(data){
-        socket.broadcast.emit('track1', data)
-        console.log(data);
+    function savePreset(data){
+        let newPreset = data
+        fs.readFile('./presets.json', append)
+        
+        function append(err, oldData){
+            let json = JSON.parse(oldData)
+            let newKey = Object.keys(json).length + 1
+            console.log(newPreset)
+            json[newKey] = newPreset
+            words = json
+           // console.log(json)
+            newJSON = JSON.stringify(json, null, 2)
+            fs.writeFile('./presets.json', newJSON, finished)
+            
+            function finished(err){
+                console.log('got it!')
+            }
+        };
+        
+ 
     }
 }

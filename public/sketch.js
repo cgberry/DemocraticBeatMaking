@@ -345,6 +345,7 @@ function savePreset() {
 
   if (confirm("Would you like to save your presets?")) {
     presets[newKey] = newPreset;
+    socket.emit('track1', newPreset);
   }
   presetButtons[presetLength] = createButton(presetLength + 1);
  // presetButtons[presetLength].position(presetLength * 30, 0)
