@@ -1,5 +1,6 @@
 /* ---------opens client-side socket----------*/
 let socket = io.connect('http://192.168.1.7:3000');
+socket.on('mainTrack1', changeColor)
 
 /////////////////////////////////////
 //        GLOBAL VARIABLES         //
@@ -41,14 +42,13 @@ let mainPresetDropdownContentDiv;
 let mainPresetButtons = [];
 let mainPresetLength;
 
-let mainSaveButton;
-
 /////////////////////////////////////
 //              INIT               //
 /////////////////////////////////////
 
 function preload(){
   userPresets = loadJSON('userPresets');
+  mainPresets = loadJSON('mainPresets');
 }
 
 
@@ -73,7 +73,7 @@ function setup() {
 
   /*CREATES THE PRESET PARAMETERS*/
   userPresetLength = Object.keys(userPresets).length;
-  
+
   userPresetDropdown = createButton("presets");
   userPresetDropdown.class('dropbtn')
   userPresetDropdown.id("userDropbtn");
@@ -97,6 +97,27 @@ function setup() {
   userSaveButton.id("savebtn");
   userSaveButton.mousePressed(savePreset);
   userSaveButton.position(600, 425);
+
+  mainPresetLength = Object.keys(mainPresets).length;
+
+  mainPresetDropdown = createButton("presets");
+  mainPresetDropdown.class('dropbtn')
+  mainPresetDropdown.id("mainDropbtn");
+  mainPresetDropdown.parent("mainDropdown");
+  mainPresetDropdown.position(40, 425);
+  
+  mainPresetDropdownContentDiv = createDiv();
+  mainPresetDropdownContentDiv.class('dropdown-content')
+  mainPresetDropdownContentDiv.id("mainDropdown-content");
+  mainPresetDropdownContentDiv.parent("mainDropbtn");
+
+  for (let i = 0; i < mainPresetLength; i++) {
+    mainPresetButtons[i] = createButton(i + 1);
+  //  mainPresetButtons[i].position(i * 30, 0)
+    mainPresetButtons[i].id(i + 1);
+    mainPresetButtons[i].mousePressed(selectPresets);
+    mainPresetButtons[i].parent("mainDropdown-content");
+  }
 
   playButton = createButton('play');
   playButton.class('playButtons');
@@ -360,15 +381,15 @@ class StepSequencer {
 
 function canvasPressed(){
   userSequencer.canvasPressed()
-  mainSequencer.canvasPressed()
+ // mainSequencer.canvasPressed()
 }
 function canvasMoved(){
    userSequencer.canvasMoved()
-  mainSequencer.canvasMoved()
+ // mainSequencer.canvasMoved()
 }
 function canvasReleased(){
   userSequencer.canvasReleased()
-  mainSequencer.canvasReleased()
+ // mainSequencer.canvasReleased()
 }
 
 /////////////////////////////////////
@@ -397,6 +418,43 @@ function setPresets() {
   userSequencer.polyMatrixNotes();
 }
 
+function selectPresets() {
+
+  //check the buttons id, whatever id it has is the preset it needs to select
+  let myID = event.srcElement.id;
+  socket.emit('mainTrack1', myID);
+  
+}
+
+function changeColor(data){
+  //console.log(data)
+
+  
+  let index = parseInt(data.index)
+  let voteCount = parseInt(data.voteCount)
+  
+  
+  let redColor = voteCount
+  let greenColor = 255 - voteCount
+  let displayColor = '#' + redColor.toString(16) + greenColor.toString(16) + '00'
+  mainPresetButtons[index - 1].style('background-color', displayColor)
+
+  if (voteCount === 0){
+    let whichButton = mainPresets[index];
+
+    // deep clone an array of arrays
+    let setSequence = whichButton.sequence.map(i => ({...i}));
+  
+    mainSequencer.polyMatrix = setSequence;
+  
+    mainSequencer.drawMatrix();
+    mainSequencer.polyMatrixNotes();
+    console.log('changed!')
+  }
+    
+  
+}
+
 /////////////////////////////////////
 //          SAVES PRESETS           //
 /////////////////////////////////////
@@ -413,13 +471,13 @@ function savePreset() {
 
   if (confirm("Would you like to save your presets?")) {
     userPresets[newKey] = newPreset;
-    socket.emit('track1', newPreset);
+    socket.emit('userTrack1', newPreset);
   }
   userPresetButtons[userPresetLength] = createButton(userPresetLength + 1);
  // presetButtons[presetLength].position(presetLength * 30, 0)
  userPresetButtons[userPresetLength].id(userPresetLength + 1);
  userPresetButtons[userPresetLength].mousePressed(setPresets);
-  userPresetButtons[userPresetLength].parent("dropdown-content");
+  userPresetButtons[userPresetLength].parent("userDropdown-content");
   Tone.context.resume();
 }
 

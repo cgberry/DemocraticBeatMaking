@@ -77,3 +77,6 @@ canvas {
 #userDropdown:hover #userDropdown-content {
   display: block;
 }
+#mainDropdown:hover #mainDropdown-content {
+  display: block;
+}
