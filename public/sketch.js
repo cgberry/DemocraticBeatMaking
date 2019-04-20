@@ -9,73 +9,94 @@ let cnv;
 
 let loopBeat;
 
-let polySequencer;
-let polySynth;
+let mainSequencer;
+let mainSynth;
 
-let volumeSlider;
+let mainVolumeSlider;
+
+let userSequencer;
+let userSynth;
+
+let userVolumeSlider;
 
 let counter;
 
 let playButton;
 
-let presets;
+let userPresets;
 
-let presetDropdown;
-let presetDropdownContentDiv;
+let userPresetDropdown;
+let userPresetDropdownContentDiv;
 
-let presetButtons = [];
-let presetLength;
+let userPresetButtons = [];
+let userPresetLength;
 
-let saveButton;
+let userSaveButton;
+
+let mainPresets;
+
+let mainPresetDropdown;
+let mainPresetDropdownContentDiv;
+
+let mainPresetButtons = [];
+let mainPresetLength;
+
+let mainSaveButton;
 
 /////////////////////////////////////
 //              INIT               //
 /////////////////////////////////////
 
 function preload(){
-  presets = loadJSON('presets');
+  userPresets = loadJSON('userPresets');
 }
 
 
 function setup() {
-  polySequencer = new StepSequencer();
+  mainSequencer = new StepSequencer();
+
+  userSequencer = new StepSequencer();
+  userSequencer.xOffset = 500
   
-  cnv = createCanvas(600, 500);
-  cnv.mousePressed(polySequencer.canvasPressed);
-  cnv.mouseMoved(polySequencer.canvasMoved);
-  cnv.mouseReleased(polySequencer.canvasReleased);
-  cnv.touchStarted(polySequencer.canvasPressed);
-  cnv.touchMoved(polySequencer.canvasMoved);
-  cnv.touchEnded(polySequencer.canvasReleased);
+  cnv = createCanvas(1200, 1200);
+  background(220);
+  cnv.mousePressed(canvasPressed);
+  cnv.mouseMoved(canvasMoved);
+  cnv.mouseReleased(canvasReleased);
+  cnv.touchStarted(canvasPressed);
+  cnv.touchMoved(canvasMoved);
+  cnv.touchEnded(canvasReleased);
   
   // cnv.touchStarted(function(event) {event.preventDefault()});
   // cnv.touchMoved(function(event) {event.preventDefault()});
   // cnv.touchEnded(function(event) {event.preventDefault()});
 
   /*CREATES THE PRESET PARAMETERS*/
-  presetLength = Object.keys(presets).length;
+  userPresetLength = Object.keys(userPresets).length;
   
-  presetDropdown = createButton("presets");
-  presetDropdown.id("dropbtn");
-  presetDropdown.parent("dropdown");
-  presetDropdown.position(0, 450);
+  userPresetDropdown = createButton("presets");
+  userPresetDropdown.class('dropbtn')
+  userPresetDropdown.id("userDropbtn");
+  userPresetDropdown.parent("userDropdown");
+  userPresetDropdown.position(500, 425);
   
-  presetDropdownContentDiv = createDiv();
-  presetDropdownContentDiv.id("dropdown-content");
-  presetDropdownContentDiv.parent("dropbtn");
+  userPresetDropdownContentDiv = createDiv();
+  userPresetDropdownContentDiv.class('dropdown-content')
+  userPresetDropdownContentDiv.id("userDropdown-content");
+  userPresetDropdownContentDiv.parent("userDropbtn");
 
-  for (let i = 0; i < presetLength; i++) {
-    presetButtons[i] = createButton(i + 1);
-  //  presetButtons[i].position(i * 30, 0)
-    presetButtons[i].id(i + 1);
-    presetButtons[i].mousePressed(setPresets);
-    presetButtons[i].parent("dropdown-content");
+  for (let i = 0; i < userPresetLength; i++) {
+    userPresetButtons[i] = createButton(i + 1);
+  //  userPresetButtons[i].position(i * 30, 0)
+    userPresetButtons[i].id(i + 1);
+    userPresetButtons[i].mousePressed(setPresets);
+    userPresetButtons[i].parent("userDropdown-content");
   }
 
-  saveButton = createButton("Save Preset");
-  saveButton.id("savebtn");
-  saveButton.mousePressed(savePreset);
-  saveButton.position(310, 450);
+  userSaveButton = createButton("Save Preset");
+  userSaveButton.id("savebtn");
+  userSaveButton.mousePressed(savePreset);
+  userSaveButton.position(600, 425);
 
   playButton = createButton('play');
   playButton.class('playButtons');
@@ -83,17 +104,44 @@ function setup() {
   playButton.mousePressed(playButtonPressed);
   
   
-	volumeSlider = createSlider(-100, 0, 0);
-  volumeSlider.id("polyVolume");
-  volumeSlider.class('volume');
-  volumeSlider.position(400, 200);
+	mainVolumeSlider = createSlider(-100, 0, 0);
+  mainVolumeSlider.id("polyVolume");
+  mainVolumeSlider.class('volume');
+  mainVolumeSlider.position(400, 200);
 
-  polySequencer.drawMatrix();
+  userVolumeSlider = createSlider(-100, 0, 0);
+  userVolumeSlider.id("polyVolume");
+  userVolumeSlider.class('volume');
+  userVolumeSlider.position(900, 200);
+
+  mainSequencer.drawMatrix();
+  userSequencer.drawMatrix();
 
   Tone.Master.mute = true;
 
-  polySynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
-  polySynth.set({
+  mainSynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
+  mainSynth.set({
+    'oscillator': {
+      'type': 'triangle'
+    },
+    'envelope': {
+      'attack': 0.005,
+      'decay': 0.1,
+      'sustain': 0.3,
+      'release': 1
+    },
+    'volume': -1.0,
+    'filter': {
+      'type': 'lowpass',
+      'frequency': 10,
+      'rolloff': -12,
+      'Q': 100,
+      'gain': 0
+    }
+  });
+
+  userSynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
+  userSynth.set({
     'oscillator': {
       'type': 'triangle'
     },
@@ -127,11 +175,17 @@ function setup() {
 //          MAIN SONG LOOP         //
 /////////////////////////////////////
 function song(time) {
-  polySynth.set({
-    'volume': (polySequencer.polySeq[counter].length * -1.0) + volumeSlider.value()
+  mainSynth.set({
+    'volume': (mainSequencer.polySeq[counter].length * -1.0) + mainVolumeSlider.value()
+  });
+
+  userSynth.set({
+    'volume': (userSequencer.polySeq[counter].length * -1.0) + userVolumeSlider.value()
   });
   
-  polySynth.triggerAttackRelease(polySequencer.polySeq[counter].filter(filterUndefined), '8n', time);
+  mainSynth.triggerAttackRelease(mainSequencer.polySeq[counter].filter(filterUndefined), '8n', time);
+
+  userSynth.triggerAttackRelease(userSequencer.polySeq[counter].filter(filterUndefined), '8n', time);
 
   counter = (counter + 1) % 16;
 
@@ -207,7 +261,6 @@ class StepSequencer {
   //       DRAWS STEP SEQUENCER      //
   /////////////////////////////////////
   drawMatrix() {
-    background(220);
     fill(125);
     /* Background Square */ 
     rect(this.xOffset, this.yOffset, this.lineEnd, this.lineEnd);
@@ -290,8 +343,6 @@ class StepSequencer {
       let toRowIndex = i % this.beatLength;
       let toColumnIndex = Math.floor(i / this.beatLength);
 
-
-      //find out how to construct an array and push that into an array
       if (this.polyMatrix[toRowIndex][toColumnIndex] === 1) {
         this.polySeq[toColumnIndex].splice(toRowIndex, 1, this.polyNotes[toRowIndex]);
       } else if (this.polyMatrix[toRowIndex][toColumnIndex] === 0) {
@@ -301,6 +352,23 @@ class StepSequencer {
     }
   }
   
+}
+
+/////////////////////////////////////
+//         CANVAS CALLBACKS        //
+/////////////////////////////////////
+
+function canvasPressed(){
+  userSequencer.canvasPressed()
+  mainSequencer.canvasPressed()
+}
+function canvasMoved(){
+   userSequencer.canvasMoved()
+  mainSequencer.canvasMoved()
+}
+function canvasReleased(){
+  userSequencer.canvasReleased()
+  mainSequencer.canvasReleased()
 }
 
 /////////////////////////////////////
@@ -318,15 +386,15 @@ function setPresets() {
 
   //check the buttons id, whatever id it has is the preset it needs to select
   let myID = event.srcElement.id;
-  let whichButton = presets[myID];
+  let whichButton = userPresets[myID];
 
   // deep clone an array of arrays
   let setSequence = whichButton.sequence.map(i => ({...i}));
   
-  polySequencer.polyMatrix = setSequence;
+  userSequencer.polyMatrix = setSequence;
   
-  polySequencer.drawMatrix();
-  polySequencer.polyMatrixNotes();
+  userSequencer.drawMatrix();
+  userSequencer.polyMatrixNotes();
 }
 
 /////////////////////////////////////
@@ -334,24 +402,24 @@ function setPresets() {
 /////////////////////////////////////
 
 function savePreset() {
-  presetLength = Object.keys(presets).length;
-  let newKey = presetLength + 1;
+  userPresetLength = Object.keys(userPresets).length;
+  let newKey = userPresetLength + 1;
   console.log(newKey);
   /*Preset in dictonary format 
   Loading it like this creates the new key*/
   let newPreset = {
-      "sequence": polySequencer.polyMatrix
+      "sequence": userSequencer.polyMatrix
   };
 
   if (confirm("Would you like to save your presets?")) {
-    presets[newKey] = newPreset;
+    userPresets[newKey] = newPreset;
     socket.emit('track1', newPreset);
   }
-  presetButtons[presetLength] = createButton(presetLength + 1);
+  userPresetButtons[userPresetLength] = createButton(userPresetLength + 1);
  // presetButtons[presetLength].position(presetLength * 30, 0)
-  presetButtons[presetLength].id(presetLength + 1);
-  presetButtons[presetLength].mousePressed(setPresets);
-  presetButtons[presetLength].parent("dropdown-content");
+ userPresetButtons[userPresetLength].id(userPresetLength + 1);
+ userPresetButtons[userPresetLength].mousePressed(setPresets);
+  userPresetButtons[userPresetLength].parent("dropdown-content");
   Tone.context.resume();
 }
 
