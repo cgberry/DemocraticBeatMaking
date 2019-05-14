@@ -1,11 +1,10 @@
 /* ---------opens client-side socket----------*/
-let socket = io.connect('http://192.168.1.7:3000');
+let socket = io.connect('localhost:3000');
 socket.on('mainTrack1', changeColor)
 
 /////////////////////////////////////
 //        GLOBAL VARIABLES         //
 /////////////////////////////////////
-
 let cnv;
 
 let loopBeat;
@@ -42,6 +41,12 @@ let mainPresetDropdownContentDiv;
 let mainPresetButtons = [];
 let mainPresetLength;
 
+let voteDiv;
+let voteP;
+let questionP;
+let yesButton, noButton;
+
+let presetID;
 /////////////////////////////////////
 //              INIT               //
 /////////////////////////////////////
@@ -53,11 +58,13 @@ function preload(){
 
 
 function setup() {
+  /* Declares StepSequencer Classes */
   mainSequencer = new StepSequencer();
 
   userSequencer = new StepSequencer();
-  userSequencer.xOffset = 500
+  userSequencer.xOffset = 520
   
+  /* Canvas Callbacks */
   cnv = createCanvas(1200, 1200);
   background(220);
   cnv.mousePressed(canvasPressed);
@@ -78,7 +85,7 @@ function setup() {
   userPresetDropdown.class('dropbtn')
   userPresetDropdown.id("userDropbtn");
   userPresetDropdown.parent("userDropdown");
-  userPresetDropdown.position(500, 425);
+  userPresetDropdown.position(520, 425);
   
   userPresetDropdownContentDiv = createDiv();
   userPresetDropdownContentDiv.class('dropdown-content')
@@ -96,7 +103,7 @@ function setup() {
   userSaveButton = createButton("Save Preset");
   userSaveButton.id("savebtn");
   userSaveButton.mousePressed(savePreset);
-  userSaveButton.position(600, 425);
+  userSaveButton.position(620, 425);
 
   mainPresetLength = Object.keys(mainPresets).length;
 
@@ -119,12 +126,13 @@ function setup() {
     mainPresetButtons[i].parent("mainDropdown-content");
   }
 
+  /* Playbutton */
   playButton = createButton('play');
   playButton.class('playButtons');
   playButton.position(0, 0);
   playButton.mousePressed(playButtonPressed);
   
-  
+  /* Volume */
 	mainVolumeSlider = createSlider(-100, 0, 0);
   mainVolumeSlider.id("polyVolume");
   mainVolumeSlider.class('volume');
@@ -135,9 +143,55 @@ function setup() {
   userVolumeSlider.class('volume');
   userVolumeSlider.position(900, 200);
 
+  /* Voting Structure */
+  voteDiv = createDiv();
+  voteDiv.id("vote");
+  
+  voteP = createP("Thank you for voting!");
+  voteP.id("voteP");
+  voteP.position(800, 425);
+  voteP.hide();
+
+  questionP = createP("Do you think this preset" + "<br>" + "contributes to the overall piece?");
+  questionP.id("questionP");
+  questionP.position(800, 415);
+  questionP.hide();
+    
+  yesButton = createButton("YES");
+  yesButton.id("yesVote");
+  yesButton.parent("vote");
+  yesButton.mousePressed(voting);
+  yesButton.position(800, 475);
+  yesButton.hide();
+  
+  noButton = createButton("NO");
+  noButton.id("noVote");
+  noButton.parent("vote");
+  noButton.mousePressed(voting);
+  noButton.position(850, 475);
+  noButton.hide();
+
+  /* Drawing */
+  strokeWeight(3);
+  line(490, 0, 490, height);
+
+  strokeWeight(1);
   mainSequencer.drawMatrix();
   userSequencer.drawMatrix();
 
+  push();
+  textSize(32);
+  fill(0);
+  text("Work Together Here", 75, 25);
+  pop();
+  
+  push();
+  fill(0);
+  textSize(32);
+  text("Make Your Contributions Here", 525, 25);
+  pop();
+
+  /* Declares Synths */
   Tone.Master.mute = true;
 
   mainSynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
@@ -182,6 +236,7 @@ function setup() {
     }
   });
 
+  /* Declares Song Structure */
   loopBeat = new Tone.Loop(song, '16n');
 
   Tone.Transport.bpm.value = 140;
@@ -189,7 +244,6 @@ function setup() {
   loopBeat.start(0);
 
   counter = 0;
-
 }
 
 /////////////////////////////////////
@@ -404,9 +458,10 @@ function filterUndefined(value) {
 //          SETS PRESETS           //
 /////////////////////////////////////
 function setPresets() {
-
   //check the buttons id, whatever id it has is the preset it needs to select
   let myID = event.srcElement.id;
+  presetID = myID
+
   let whichButton = userPresets[myID];
 
   // deep clone an array of arrays
@@ -416,10 +471,25 @@ function setPresets() {
   
   userSequencer.drawMatrix();
   userSequencer.polyMatrixNotes();
+  
+  //When Votes selected
+  if (whichButton.haveVoted === false){
+    yesButton.show();
+    noButton.show();
+    questionP.show();
+     voteP.hide();
+  }else{
+   yesButton.hide();
+   noButton.hide();
+   questionP.hide();
+    voteP.show();
+  }
 }
 
+/////////////////////////////////////
+//            SPAM VOTES           //
+/////////////////////////////////////
 function selectPresets() {
-
   //check the buttons id, whatever id it has is the preset it needs to select
   let myID = event.srcElement.id;
   socket.emit('mainTrack1', myID);
@@ -427,15 +497,19 @@ function selectPresets() {
 }
 
 function changeColor(data){
-  //console.log(data)
-
-  
   let index = parseInt(data.index)
   let voteCount = parseInt(data.voteCount)
+
+  voteCountPercentage = voteCount/255
+  console.log(voteCountPercentage)
   
-  
-  let redColor = voteCount
-  let greenColor = 255 - voteCount
+  let redColor = (voteCountPercentage * 2) * 255
+  let greenColor = 255
+
+  if (voteCountPercentage > 0.5) {
+    redColor = 255
+    greenColor = 255 - (255 * ((voteCountPercentage - 0.5) * 2))
+  }
   let displayColor = '#' + redColor.toString(16) + greenColor.toString(16) + '00'
   mainPresetButtons[index - 1].style('background-color', displayColor)
 
@@ -456,7 +530,7 @@ function changeColor(data){
 }
 
 /////////////////////////////////////
-//          SAVES PRESETS           //
+//          SAVES PRESETS          //
 /////////////////////////////////////
 
 function savePreset() {
@@ -465,8 +539,17 @@ function savePreset() {
   console.log(newKey);
   /*Preset in dictonary format 
   Loading it like this creates the new key*/
+  let date = new Date();
+  let time = date.getTime();
+
   let newPreset = {
-      "sequence": userSequencer.polyMatrix
+      "sequence": userSequencer.polyMatrix,
+      "haveVoted": false,
+      "votes": {
+          "date": time,
+          "yes": 0,
+          "no": 0
+      } 
   };
 
   if (confirm("Would you like to save your presets?")) {
@@ -481,6 +564,33 @@ function savePreset() {
   Tone.context.resume();
 }
 
+/////////////////////////////////////
+//             VOTING              //
+/////////////////////////////////////
+function voting(){
+  let whichButton = userPresets[presetID]
+  let whichVote = event.srcElement.id
+  console.log(whichVote);
+
+  let sendVote = {index: presetID, vote: whichVote}
+  
+ if(whichVote === "yesVote"){
+   whichButton.haveVoted = true
+   yesButton.hide();
+   noButton.hide();
+   questionP.hide();
+   voteP.show();
+   socket.emit('userVotingTrack1', sendVote);
+ }
+   if(whichVote === "noVote"){
+      whichButton.haveVoted = true
+   yesButton.hide();
+   noButton.hide();
+   questionP.hide();
+   voteP.show();
+   socket.emit('userVotingTrack1', sendVote);
+ }
+}
 
 /////////////////////////////////////
 //       MASTER PLAY BUTTON        //
