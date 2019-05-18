@@ -7,9 +7,11 @@ canvas {
   touch-action: none;
 }
 
-.volume{
+.slider{
+  -webkit-appearance: none;
   position:absolute; 
   -webkit-transform: rotate(270deg);
+  background:#000000;
 }
 
 .playButtons{

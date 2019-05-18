@@ -1,5 +1,5 @@
 /* ---------opens client-side socket----------*/
-let socket = io.connect('localhost:3000');
+let socket = io.connect();
 socket.on('mainTrack1', changeColor)
 
 /////////////////////////////////////
@@ -47,6 +47,18 @@ let questionP;
 let yesButton, noButton;
 
 let presetID;
+
+let attackSlider, decaySlider, sustainSlider, releaseSlider;
+
+let pitchEnterButton, waveEnterButton;
+let pitchArray = [], waveform;
+let pitchInput, waveInput;
+
+let discordPanel;
+let discordYPos = 0;
+
+let redditImage;
+let redditA;
 /////////////////////////////////////
 //              INIT               //
 /////////////////////////////////////
@@ -58,12 +70,6 @@ function preload(){
 
 
 function setup() {
-  /* Declares StepSequencer Classes */
-  mainSequencer = new StepSequencer();
-
-  userSequencer = new StepSequencer();
-  userSequencer.xOffset = 520
-  
   /* Canvas Callbacks */
   cnv = createCanvas(1200, 1200);
   background(220);
@@ -77,6 +83,15 @@ function setup() {
   // cnv.touchStarted(function(event) {event.preventDefault()});
   // cnv.touchMoved(function(event) {event.preventDefault()});
   // cnv.touchEnded(function(event) {event.preventDefault()});
+
+  //GONNA PUT THIS INTO ONE GIANT FOR LOOP! WISH ME LUCK!
+  /* Declares StepSequencer Classes */
+  mainSequencer = new StepSequencer();
+ // mainSequencer.yOffset = 520
+
+  userSequencer = new StepSequencer();
+  userSequencer.xOffset = 520;
+ // userSequencer.yOffset = 
 
   /*CREATES THE PRESET PARAMETERS*/
   userPresetLength = Object.keys(userPresets).length;
@@ -134,14 +149,14 @@ function setup() {
   
   /* Volume */
 	mainVolumeSlider = createSlider(-100, 0, 0);
-  mainVolumeSlider.id("polyVolume");
-  mainVolumeSlider.class('volume');
-  mainVolumeSlider.position(400, 200);
+  mainVolumeSlider.id("mainVolume");
+  mainVolumeSlider.class('slider');
+  mainVolumeSlider.position(400, 100);
 
   userVolumeSlider = createSlider(-100, 0, 0);
-  userVolumeSlider.id("polyVolume");
-  userVolumeSlider.class('volume');
-  userVolumeSlider.position(900, 200);
+  userVolumeSlider.id("userVolume");
+  userVolumeSlider.class('slider');
+  userVolumeSlider.position(880, 100);
 
   /* Voting Structure */
   voteDiv = createDiv();
@@ -171,29 +186,59 @@ function setup() {
   noButton.position(850, 475);
   noButton.hide();
 
-  /* Drawing */
-  strokeWeight(3);
-  line(490, 0, 490, height);
+  /* Envelope Sliders */
+  attackSlider = createSlider(0.0, 0.25, 0.1, 0.001);
+  attackSlider.id("userAttack");
+  attackSlider.class('slider')
+  attackSlider.position(930, 100);
+  
+  decaySlider = createSlider(0.0, 1.0, 0.1, 0.001);
+  decaySlider.id("userDecay");
+  decaySlider.class('slider')
+  decaySlider.position(950, 100);
+  
+  sustainSlider = createSlider(0.0, 1.0, 0.1, 0.001);
+  sustainSlider.id("userSustain");
+  sustainSlider.class('slider')
+  sustainSlider.position(970, 100);
+  
+  releaseSlider = createSlider(0.1, 10.0, 0.1, 0.001);
+  releaseSlider.id("userRelease");
+  releaseSlider.class('slider')
+  releaseSlider.position(990, 100);
 
+  /* Input Fields */
+  pitchInput = createElement('textarea');
+  pitchInput.attribute("style", "height: 80px; width: 100px");
+  pitchInput.attribute("placeholder", "C4 D4 E4 F#4 G4 A4 B4 C5 D5 E5 Gb5 G5 A5 B5 C6 D6");
+  pitchInput.class("textareas")
+  pitchInput.id("pitchInput1")
+  pitchInput.position(930, 300)
+
+  pitchEnterButton = createButton("Enter<br> Pitch Scheme");
+  pitchEnterButton.mousePressed(yourPitchInput);
+  pitchEnterButton.class("enterbutton")
+  pitchEnterButton.id("pitchenter1")
+  pitchEnterButton.position(1040, 300)
+  
+  waveInput = createInput();
+  waveInput.class("inputs")
+  waveInput.attribute("placeholder", "ex. sine3 triangle square5 sawtooth16")
+  waveInput.id("waveinput1")
+  waveInput.position(930, 400)
+
+  waveEnterButton = createButton("Enter Your<br> Waveform");
+  waveEnterButton.mousePressed(yourWaveInput);
+  waveEnterButton.class("enterbutton")
+  waveEnterButton.id("waveenter1")
+  waveEnterButton.position(1080, 400)
+
+  /* Draw Sequencers */
   strokeWeight(1);
   mainSequencer.drawMatrix();
   userSequencer.drawMatrix();
 
-  push();
-  textSize(32);
-  fill(0);
-  text("Work Together Here", 75, 25);
-  pop();
-  
-  push();
-  fill(0);
-  textSize(32);
-  text("Make Your Contributions Here", 525, 25);
-  pop();
-
   /* Declares Synths */
-  Tone.Master.mute = true;
-
   mainSynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
   mainSynth.set({
     'oscillator': {
@@ -235,6 +280,45 @@ function setup() {
       'gain': 0
     }
   });
+  
+  ///////////////////////////////////////////////////////
+  /* what happens below is only created once */
+  ///////////////////////////////////////////////////////
+  discordPanel = createElement("iframe")
+  discordPanel.attribute("src", "https://discordapp.com/widget?id=578783270532284417&theme=dark");
+  discordPanel.attribute("width", "300");
+  discordPanel.attribute("height", "500");
+  discordPanel.position(width, discordYPos);
+  
+  redditA = createA("https://www.reddit.com/r/DemocraticBeatMaking/", "");
+  redditA.id("redditLink")
+  redditA.position(width - 70, 10)
+  
+  redditImage = createImg("http://i.imgur.com/sdO8tAw.png")
+  redditImage.size(50, AUTO);
+  redditImage.parent("redditLink");
+  
+  
+  /* Drawing */
+  strokeWeight(3);
+  line(490, 0, 490, height);
+
+  strokeWeight(1);
+
+  push();
+  textSize(32);
+  fill(0);
+  text("Work Together Here", 75, 25);
+  pop();
+  
+  push();
+  fill(0);
+  textSize(32);
+  text("Make Your Contributions Here", 525, 25);
+  pop();
+
+  /* Mute when started */
+  Tone.Master.mute = true;
 
   /* Declares Song Structure */
   loopBeat = new Tone.Loop(song, '16n');
@@ -255,7 +339,13 @@ function song(time) {
   });
 
   userSynth.set({
-    'volume': (userSequencer.polySeq[counter].length * -1.0) + userVolumeSlider.value()
+    'volume': (userSequencer.polySeq[counter].length * -1.0) + userVolumeSlider.value(),
+    'envelope': {
+      'attack': attackSlider.value(),
+      'decay': decaySlider.value(),
+      'sustain': sustainSlider.value(),
+      'release': releaseSlider.value()
+    }
   });
   
   mainSynth.triggerAttackRelease(mainSequencer.polySeq[counter].filter(filterUndefined), '8n', time);
@@ -290,8 +380,7 @@ class StepSequencer {
     
 	/* Notes to be pushed into polySeq */
   this.polyNotes = ['G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4',
-    'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5'
-  ];
+    'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5'];
     
   /* Actual sequence to be triggered in polySynth.triggerAttackRelease */
   this.polySeq = [
@@ -328,8 +417,6 @@ class StepSequencer {
   this.canvasPressed = this.canvasPressed.bind(this);
   this.canvasMoved = this.canvasMoved.bind(this);
   this.canvasReleased = this.canvasReleased.bind(this);
-  
-    
   }
 
   /////////////////////////////////////
@@ -455,33 +542,67 @@ function filterUndefined(value) {
 
 
 /////////////////////////////////////
-//          SETS PRESETS           //
+//       SETS PRESETS FOR USER     //
 /////////////////////////////////////
 function setPresets() {
   //check the buttons id, whatever id it has is the preset it needs to select
   let myID = event.srcElement.id;
   presetID = myID
 
-  let whichButton = userPresets[myID];
+  let whichButton = {...userPresets[myID]};
 
   // deep clone an array of arrays
-  let setSequence = whichButton.sequence.map(i => ({...i}));
+  let setSequence = whichButton.sequence.map(i => ([...i]));
+  let setEnvelope = {...whichButton.envelope};
+
+  let setAttack = setEnvelope.attack
+  let setDecay = setEnvelope.decay
+  let setSustain = setEnvelope.sustain
+  let setRelease = setEnvelope.release
+
+  let setWaveform = whichButton.waveform;
+  let setPitchScheme = whichButton.pitchArray;
+  console.log(setPitchScheme)
   
   userSequencer.polyMatrix = setSequence;
+  userSequencer.polyNotes = setPitchScheme;
+
+  userSynth.set({
+    'oscillator': {
+      'type': setWaveform
+    },
+    'envelope': {
+      'attack': setAttack,
+      'decay': setDecay,
+      'sustain': setSustain,
+      'release': setRelease
+    }
+  });
+
+  attackSlider.value(setAttack);
+  decaySlider.value(setDecay);
+  sustainSlider.value(setSustain);
+  releaseSlider.value(setRelease);
   
   userSequencer.drawMatrix();
   userSequencer.polyMatrixNotes();
+
+  let placeholderString = setPitchScheme.toString();
+    let newPitchString = placeholderString.replace(/,/g, ' ')
+    pitchInput.attribute("placeholder", newPitchString)
+
+    waveInput.attribute("placeholder", setWaveform)
   
   //When Votes selected
   if (whichButton.haveVoted === false){
     yesButton.show();
     noButton.show();
     questionP.show();
-     voteP.hide();
+    voteP.hide();
   }else{
-   yesButton.hide();
-   noButton.hide();
-   questionP.hide();
+    yesButton.hide();
+    noButton.hide();
+    questionP.hide();
     voteP.show();
   }
 }
@@ -496,7 +617,11 @@ function selectPresets() {
   
 }
 
+/////////////////////////////////////
+//        SETS MAIN PRESETS        //
+/////////////////////////////////////
 function changeColor(data){
+  //Changes Color of Button
   let index = parseInt(data.index)
   let voteCount = parseInt(data.voteCount)
 
@@ -513,14 +638,36 @@ function changeColor(data){
   let displayColor = '#' + redColor.toString(16) + greenColor.toString(16) + '00'
   mainPresetButtons[index - 1].style('background-color', displayColor)
 
+  //Vote Procedure
   if (voteCount === 0){
-    let whichButton = mainPresets[index];
+    let whichButton = {...mainPresets[index]};
 
     // deep clone an array of arrays
-    let setSequence = whichButton.sequence.map(i => ({...i}));
-  
+    let setSequence = whichButton.sequence.map(i => ([...i]));
+    let setEnvelope = {...whichButton.envelope};
+
+    let setAttack = setEnvelope.attack
+    let setDecay = setEnvelope.decay
+    let setSustain = setEnvelope.sustain
+    let setRelease = setEnvelope.release
+
+    let setWaveform = whichButton.waveform;
+    let setPitchScheme = whichButton.pitchArray;
+
+    mainSynth.set({
+      'oscillator': {
+        'type': setWaveform
+      },
+      'envelope': {
+        'attack': setAttack,
+        'decay': setDecay,
+        'sustain': setSustain,
+        'release': setRelease
+        }
+    });
     mainSequencer.polyMatrix = setSequence;
-  
+    mainSequencer.polyNotes = setPitchScheme;
+
     mainSequencer.drawMatrix();
     mainSequencer.polyMatrixNotes();
     console.log('changed!')
@@ -544,6 +691,14 @@ function savePreset() {
 
   let newPreset = {
       "sequence": userSequencer.polyMatrix,
+      "envelope":{
+        "attack": attackSlider.value(),
+        "decay": decaySlider.value(),
+        "sustain": sustainSlider.value(),
+        "release": releaseSlider.value(),
+      },
+      "pitchArray": userSequencer.polyNotes,
+      "waveform": waveform,
       "haveVoted": false,
       "votes": {
           "date": time,
@@ -582,14 +737,103 @@ function voting(){
    voteP.show();
    socket.emit('userVotingTrack1', sendVote);
  }
-   if(whichVote === "noVote"){
-      whichButton.haveVoted = true
-   yesButton.hide();
-   noButton.hide();
-   questionP.hide();
-   voteP.show();
-   socket.emit('userVotingTrack1', sendVote);
- }
+  if(whichVote === "noVote"){
+    whichButton.haveVoted = true
+    yesButton.hide();
+    noButton.hide();
+    questionP.hide();
+    voteP.show();
+     socket.emit('userVotingTrack1', sendVote);
+  }
+}
+
+/////////////////////////////////////
+//           TEST INPUTS           //
+/////////////////////////////////////
+function yourPitchInput(){
+  let myValue = pitchInput.value()
+  
+  //turns input value into an array
+  let splitValue = myValue.split(" ");
+  
+  //regexp to test note names
+  let reg = /^[ABCDEFG](#)?(b)?[0-9]$/
+  
+  //regexp tests
+  let regTests = regArrayTest(splitValue, reg);
+  
+  console.log(regTests);
+  
+  if(splitValue.length === 16 && regTests != false){
+    pitchArray = []
+    for(let i = 0; i < splitValue.length; i++){
+      pitchArray.push(splitValue[i]);
+    }
+    console.log(pitchArray)
+    userSequencer.polyNotes = pitchArray;
+    userSequencer.polyMatrixNotes();
+
+    let placeholderString = pitchArray.toString();
+    let newString = placeholderString.replace(/,/g, ' ')
+    pitchInput.attribute("placeholder", newString)
+  }else if (splitValue.length != 16 || regTests === false){
+    alert("You must have sixteen notes in this format:\nB5 C6 D3 F3 . . .")
+  }
+  console.log(pitchArray)
+}
+
+function yourWaveInput(){
+  let myValue = waveInput.value()
+  
+  //regexp to test waveform
+  let reg = /^(sine|triangle|square|sawtooth)(1)?(\d)?$/
+  
+  //regexp tests
+  let regTest = reg.test(myValue, reg);
+  
+  console.log(regTest);
+  
+  if(regTest){
+    waveform = myValue
+    waveInput.attribute("placeholder", waveform)
+    userSynth.set({
+      'oscillator': {
+        'type': waveform
+      }
+    });
+  }else if (!regTest){
+    alert("You must have a waveform in this format:\n sine triangle2 sawtooth8 square16 \n (did you also press enter while you were typing the notes in?)")
+  }
+  console.log(waveform)
+}
+
+function regArrayTest(array, reg){
+  for(let i = 0; i < array.length; i++){
+   let regTest = reg.test(array[i]);
+    if (regTest === false){
+     return regTest; 
+    }
+  }
+}
+
+/////////////////////////////////////
+//         DISCORD SCROLL          //
+/////////////////////////////////////
+function mouseWheel(event) {
+  print(event.delta);
+  //move the square according to the vertical scroll amount
+  discordYPos += event.delta;
+  if(discordYPos > 700){
+   discordYPos = 700 
+  }
+  
+  if(discordYPos < 0){
+   discordYPos = 0 
+  }
+  
+  discordPanel.position(width, discordYPos);
+  //uncomment to block page scrolling
+  //return false;
 }
 
 /////////////////////////////////////

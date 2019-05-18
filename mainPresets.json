@@ -289,7 +289,16 @@
         0,
         0
       ]
-    ]
+    ],
+    "envelope":{
+      "attack": 0.01,
+      "decay": 0.01,
+      "sustain": 0.8,
+      "release": 1.0
+    },
+    "pitchArray": ["G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4",
+      "A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5"],
+    "waveform": "triangle"
   },
   "2": {
     "sequence": [
@@ -581,7 +590,16 @@
         0,
         0
       ]
-    ]
+    ],
+    "envelope":{
+      "attack": 0.01,
+      "decay": 0.01,
+      "sustain": 0.8,
+      "release": 1.0
+    },
+    "pitchArray": ["G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4",
+      "A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5"],
+    "waveform": "triangle"
   },
   "3": {
     "sequence": [
@@ -873,7 +891,16 @@
         0,
         0
       ]
-    ]
+    ],
+    "envelope":{
+      "attack": 0.01,
+      "decay": 0.01,
+      "sustain": 0.8,
+      "release": 1.0
+    },
+    "pitchArray": ["G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4",
+      "A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5"],
+    "waveform": "triangle"
   },
   "4": {
     "sequence": [
@@ -1166,6 +1193,15 @@
         0
       ]
     ],
+    "envelope":{
+      "attack": 0.1,
+      "decay": 0.5,
+      "sustain": 0.4,
+      "release": 6.5
+    },
+    "pitchArray": ["G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4",
+      "A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5"],
+    "waveform": "triangle",
     "haveVoted": false,
     "votes": {
       "date": 1557855283022,

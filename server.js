@@ -82,13 +82,13 @@ setInterval(function(){
             }
     }
     
-}, 1000 * 60 * 10)
+}, 1000 * 60 * 60 * 24)
 
 /*--------acceses express and listens on the localport--------*/
 let express = require('express');
 
 let app = express();
-let server = app.listen(3000);
+let server = app.listen(8080);
 
 /*--------acceses socket.io and displays website files--------*/
 let socket = require('socket.io');
@@ -97,6 +97,8 @@ app.use(express.static('public'));
 
 app.get('/userPresets', sendPresets)
 app.get('/mainPresets', sendMainPresets)
+app.get('/reddit', (req, res) => {res.redirect("https://www.reddit.com/r/DemocraticBeatMaking/")})
+app.get('/discord', (req, res) => {res.redirect("https://discordapp.com/channels/578783270532284417/578783271094190082")})
 
 
 function sendPresets(request, response){
