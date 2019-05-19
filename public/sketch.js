@@ -9,15 +9,15 @@ let cnv;
 
 let loopBeat;
 
-let mainSequencer;
-let mainSynth;
+let mainSequencer = [];
+let mainSynth = [];
 
-let mainVolumeSlider;
+let mainVolumeSlider = [];
 
-let userSequencer;
-let userSynth;
+let userSequencer = [];
+let userSynth = [];
 
-let userVolumeSlider;
+let userVolumeSlider = [];
 
 let counter;
 
@@ -28,8 +28,8 @@ let userPresets;
 let userPresetDropdown;
 let userPresetDropdownContentDiv;
 
-let userPresetButtons = [];
-let userPresetLength;
+let userPresetButtons = [[], [], []];
+let userPresetLength = [];
 
 let userSaveButton;
 
@@ -38,21 +38,21 @@ let mainPresets;
 let mainPresetDropdown;
 let mainPresetDropdownContentDiv;
 
-let mainPresetButtons = [];
-let mainPresetLength;
+let mainPresetButtons = [[], [], []];
+let mainPresetLength =[];
 
-let voteDiv;
-let voteP;
-let questionP;
-let yesButton, noButton;
+let voteDiv=[];
+let voteP=[];
+let questionP=[];
+let yesButton=[], noButton=[];
 
 let presetID;
 
-let attackSlider, decaySlider, sustainSlider, releaseSlider;
+let attackSlider = [], decaySlider =[], sustainSlider =[], releaseSlider =[];
 
 let pitchEnterButton, waveEnterButton;
 let pitchArray = [], waveform;
-let pitchInput, waveInput;
+let pitchInput = [], waveInput = [];
 
 let discordPanel;
 let discordYPos = 0;
@@ -71,7 +71,7 @@ function preload(){
 
 function setup() {
   /* Canvas Callbacks */
-  cnv = createCanvas(1200, 1200);
+  cnv = createCanvas(1200, 1630);
   background(220);
   cnv.mousePressed(canvasPressed);
   cnv.mouseMoved(canvasMoved);
@@ -85,205 +85,214 @@ function setup() {
   // cnv.touchEnded(function(event) {event.preventDefault()});
 
   //GONNA PUT THIS INTO ONE GIANT FOR LOOP! WISH ME LUCK!
-  /* Declares StepSequencer Classes */
-  mainSequencer = new StepSequencer();
- // mainSequencer.yOffset = 520
+  for(let sequencerIndex = 0; sequencerIndex < 3; sequencerIndex++){
+    /* Declares StepSequencer Classes */
+    let sequencerSpacing = 500 * sequencerIndex;
+    mainSequencer[sequencerIndex] = new StepSequencer();
+    mainSequencer[sequencerIndex].yOffset = 40 + sequencerSpacing
 
-  userSequencer = new StepSequencer();
-  userSequencer.xOffset = 520;
- // userSequencer.yOffset = 
+    userSequencer[sequencerIndex] = new StepSequencer();
+    userSequencer[sequencerIndex].xOffset = 520;
+    userSequencer[sequencerIndex].yOffset = 40 + sequencerSpacing
 
-  /*CREATES THE PRESET PARAMETERS*/
-  userPresetLength = Object.keys(userPresets).length;
+    /*CREATES THE PRESET PARAMETERS*/
+    userPresetLength[sequencerIndex] = Object.keys(userPresets[sequencerIndex + 1]).length;
 
-  userPresetDropdown = createButton("presets");
-  userPresetDropdown.class('dropbtn')
-  userPresetDropdown.id("userDropbtn");
-  userPresetDropdown.parent("userDropdown");
-  userPresetDropdown.position(520, 425);
-  
-  userPresetDropdownContentDiv = createDiv();
-  userPresetDropdownContentDiv.class('dropdown-content')
-  userPresetDropdownContentDiv.id("userDropdown-content");
-  userPresetDropdownContentDiv.parent("userDropbtn");
+    userPresetDropdown = createButton("presets");
+    userPresetDropdown.class('dropbtn')
+    userPresetDropdown.id("userDropbtn" + sequencerIndex);
+    userPresetDropdown.parent("userDropdown" + sequencerIndex);
+    userPresetDropdown.position(520, 425 + sequencerSpacing);
 
-  for (let i = 0; i < userPresetLength; i++) {
-    userPresetButtons[i] = createButton(i + 1);
-  //  userPresetButtons[i].position(i * 30, 0)
-    userPresetButtons[i].id(i + 1);
-    userPresetButtons[i].mousePressed(setPresets);
-    userPresetButtons[i].parent("userDropdown-content");
-  }
+    userPresetDropdownContentDiv = createDiv();
+    userPresetDropdownContentDiv.class('dropdown-content')
+    userPresetDropdownContentDiv.id("userDropdown-content" + sequencerIndex);
+    userPresetDropdownContentDiv.parent("userDropbtn" + sequencerIndex);
 
-  userSaveButton = createButton("Save Preset");
-  userSaveButton.id("savebtn");
-  userSaveButton.mousePressed(savePreset);
-  userSaveButton.position(620, 425);
+    for (let i = 0; i < userPresetLength[sequencerIndex]; i++) {
+      let seqIndexAndPresetIndex = sequencerIndex.toString() + " " + (i + 1)
+      userPresetButtons[sequencerIndex][i] = createButton(seqIndexAndPresetIndex);
+    //  userPresetButtons[i].position(i * 30, 0)
+      userPresetButtons[sequencerIndex][i].id(seqIndexAndPresetIndex);
+      userPresetButtons[sequencerIndex][i].mousePressed(setPresets);
+      userPresetButtons[sequencerIndex][i].parent("userDropdown-content" + sequencerIndex);
+    }
 
-  mainPresetLength = Object.keys(mainPresets).length;
+    userSaveButton = createButton("Save Preset");
+    userSaveButton.class("savebtn")
+    userSaveButton.id("savebtn" + " " + sequencerIndex);
+    userSaveButton.mousePressed(savePreset);
+    userSaveButton.position(620, 425 + sequencerSpacing);
 
-  mainPresetDropdown = createButton("presets");
-  mainPresetDropdown.class('dropbtn')
-  mainPresetDropdown.id("mainDropbtn");
-  mainPresetDropdown.parent("mainDropdown");
-  mainPresetDropdown.position(40, 425);
-  
-  mainPresetDropdownContentDiv = createDiv();
-  mainPresetDropdownContentDiv.class('dropdown-content')
-  mainPresetDropdownContentDiv.id("mainDropdown-content");
-  mainPresetDropdownContentDiv.parent("mainDropbtn");
+    mainPresetLength[sequencerIndex] = Object.keys(mainPresets[sequencerIndex + 1]).length;
 
-  for (let i = 0; i < mainPresetLength; i++) {
-    mainPresetButtons[i] = createButton(i + 1);
-  //  mainPresetButtons[i].position(i * 30, 0)
-    mainPresetButtons[i].id(i + 1);
-    mainPresetButtons[i].mousePressed(selectPresets);
-    mainPresetButtons[i].parent("mainDropdown-content");
-  }
+    mainPresetDropdown = createButton("presets");
+    mainPresetDropdown.class('dropbtn')
+    mainPresetDropdown.id("mainDropbtn" + sequencerIndex);
+    mainPresetDropdown.parent("mainDropdown" + sequencerIndex);
+    mainPresetDropdown.position(40, 425 + sequencerSpacing);
+
+    mainPresetDropdownContentDiv = createDiv();
+    mainPresetDropdownContentDiv.class('dropdown-content')
+    mainPresetDropdownContentDiv.id("mainDropdown-content" + sequencerIndex);
+    mainPresetDropdownContentDiv.parent("mainDropbtn" + sequencerIndex);
+
+    for (let i = 0; i < mainPresetLength[sequencerIndex]; i++) {
+      let seqIndexAndPresetIndex = sequencerIndex.toString() + " " + (i + 1)
+      mainPresetButtons[sequencerIndex][i] = createButton(seqIndexAndPresetIndex);
+    //  mainPresetButtons[i].position(i * 30, 0)
+      mainPresetButtons[sequencerIndex][i].id(seqIndexAndPresetIndex);
+      mainPresetButtons[sequencerIndex][i].mousePressed(selectPresets);
+      mainPresetButtons[sequencerIndex][i].parent("mainDropdown-content" + sequencerIndex);
+    }
+
+
+
+    /* Volume */
+    mainVolumeSlider[sequencerIndex] = createSlider(-100, 0, 0);
+    mainVolumeSlider[sequencerIndex].id("mainVolume" + sequencerIndex);
+    mainVolumeSlider[sequencerIndex].class('slider');
+    mainVolumeSlider[sequencerIndex].position(400, 100 + sequencerSpacing);
+
+    userVolumeSlider[sequencerIndex] = createSlider(-100, 0, 0);
+    userVolumeSlider[sequencerIndex].id("userVolume" + sequencerIndex);
+    userVolumeSlider[sequencerIndex].class('slider');
+    userVolumeSlider[sequencerIndex].position(880, 100 + sequencerSpacing);
+
+    /* Voting Structure */
+    voteDiv[sequencerIndex] = createDiv();
+    voteDiv[sequencerIndex].id("vote" + sequencerIndex);
+
+    voteP[sequencerIndex] = createP("Thank you for voting!");
+    voteP[sequencerIndex].id("voteP" + sequencerIndex);
+    voteP[sequencerIndex].position(800, 425 + sequencerSpacing);
+    voteP[sequencerIndex].hide();
+
+    questionP[sequencerIndex] = createP("Do you think this preset" + "<br>" + "contributes to the overall piece?");
+    questionP[sequencerIndex].id("questionP" + sequencerIndex);
+    questionP[sequencerIndex].position(800, 415 + sequencerSpacing);
+    questionP[sequencerIndex].hide();
+
+    yesButton[sequencerIndex] = createButton("YES");
+    yesButton[sequencerIndex].id("yesVote" +  sequencerIndex);
+    yesButton[sequencerIndex].parent("vote" + sequencerIndex);
+    yesButton[sequencerIndex].mousePressed(voting);
+    yesButton[sequencerIndex].position(800, 475 + sequencerSpacing);
+    yesButton[sequencerIndex].hide();
+
+    noButton[sequencerIndex] = createButton("NO");
+    noButton[sequencerIndex].id("noVote" +  sequencerIndex);
+    noButton[sequencerIndex].parent("vote" + sequencerIndex);
+    noButton[sequencerIndex].mousePressed(voting);
+    noButton[sequencerIndex].position(850, 475 + sequencerSpacing);
+    noButton[sequencerIndex].hide();
+
+    /* Envelope Sliders */
+    attackSlider[sequencerIndex] = createSlider(0.0, 0.25, 0.1, 0.001);
+    attackSlider[sequencerIndex].id("userAttack" + sequencerIndex);
+    attackSlider[sequencerIndex].class('slider')
+    attackSlider[sequencerIndex].position(930, 100 + sequencerSpacing);
+
+    decaySlider[sequencerIndex] = createSlider(0.0, 1.0, 0.1, 0.001);
+    decaySlider[sequencerIndex].id("userDecay" + sequencerIndex);
+    decaySlider[sequencerIndex].class('slider')
+    decaySlider[sequencerIndex].position(950, 100 + sequencerSpacing);
+
+    sustainSlider[sequencerIndex] = createSlider(0.0, 1.0, 0.1, 0.001);
+    sustainSlider[sequencerIndex].id("userSustain" + sequencerIndex);
+    sustainSlider[sequencerIndex].class('slider')
+    sustainSlider[sequencerIndex].position(970, 100 + sequencerSpacing);
+
+    releaseSlider[sequencerIndex] = createSlider(0.1, 10.0, 0.1, 0.001);
+    releaseSlider[sequencerIndex].id("userRelease" + sequencerIndex);
+    releaseSlider[sequencerIndex].class('slider')
+    releaseSlider[sequencerIndex].position(990, 100 + sequencerSpacing);
+
+    /* Input Fields */
+    pitchInput[sequencerIndex] = createElement('textarea');
+    pitchInput[sequencerIndex].attribute("style", "height: 80px; width: 100px");
+    pitchInput[sequencerIndex].attribute("placeholder", "C4 D4 E4 F#4 G4 A4 B4 C5 D5 E5 Gb5 G5 A5 B5 C6 D6");
+    pitchInput[sequencerIndex].class("textareas")
+    pitchInput[sequencerIndex].id("pitchInput" + " " + sequencerIndex)
+    pitchInput[sequencerIndex].position(930, 300 + sequencerSpacing)
+
+    pitchEnterButton = createButton("Enter<br> Pitch Scheme");
+    pitchEnterButton.mousePressed(yourPitchInput);
+    pitchEnterButton.class("enterbutton")
+    pitchEnterButton.id("pitchenter" + " " + sequencerIndex)
+    pitchEnterButton.position(1040, 300 + sequencerSpacing)
+
+    waveInput[sequencerIndex] = createInput();
+    waveInput[sequencerIndex].class("inputs")
+    waveInput[sequencerIndex].attribute("placeholder", "ex. sine3 triangle square5 sawtooth16")
+    waveInput[sequencerIndex].id("waveinput" + " " + sequencerIndex)
+    waveInput[sequencerIndex].position(930, 400 + sequencerSpacing)
+
+    waveEnterButton = createButton("Enter Your<br> Waveform");
+    waveEnterButton.mousePressed(yourWaveInput);
+    waveEnterButton.class("enterbutton")
+    waveEnterButton.id("waveenter"  + " " + sequencerIndex)
+    waveEnterButton.position(1080, 400 + sequencerSpacing)
+
+    /* Draw Sequencers */
+    strokeWeight(1);
+    mainSequencer[sequencerIndex].drawMatrix();
+    userSequencer[sequencerIndex].drawMatrix();
+
+    /* Declares Synths */
+    mainSynth[sequencerIndex] = new Tone.PolySynth(4, Tone.Synth).toMaster();
+    mainSynth[sequencerIndex].set({
+    'oscillator': {
+      'type': 'triangle'
+    },
+    'envelope': {
+      'attack': 0.005,
+      'decay': 0.1,
+      'sustain': 0.3,
+      'release': 1
+    },
+    'volume': -1.0,
+    'filter': {
+      'type': 'lowpass',
+      'frequency': 10,
+      'rolloff': -12,
+      'Q': 100,
+      'gain': 0
+    }
+    });
+
+    userSynth[sequencerIndex] = new Tone.PolySynth(4, Tone.Synth).toMaster();
+    userSynth[sequencerIndex].set({
+    'oscillator': {
+      'type': 'triangle'
+    },
+    'envelope': {
+      'attack': 0.005,
+      'decay': 0.1,
+      'sustain': 0.3,
+      'release': 1
+    },
+    'volume': -1.0,
+    'filter': {
+      'type': 'lowpass',
+      'frequency': 10,
+      'rolloff': -12,
+      'Q': 100,
+      'gain': 0
+    }
+    });
+}
+
+  ///////////////////////////////////////////////////////
+  /* what happens below is only created once */
+  ///////////////////////////////////////////////////////
 
   /* Playbutton */
   playButton = createButton('play');
   playButton.class('playButtons');
   playButton.position(0, 0);
   playButton.mousePressed(playButtonPressed);
-  
-  /* Volume */
-	mainVolumeSlider = createSlider(-100, 0, 0);
-  mainVolumeSlider.id("mainVolume");
-  mainVolumeSlider.class('slider');
-  mainVolumeSlider.position(400, 100);
 
-  userVolumeSlider = createSlider(-100, 0, 0);
-  userVolumeSlider.id("userVolume");
-  userVolumeSlider.class('slider');
-  userVolumeSlider.position(880, 100);
-
-  /* Voting Structure */
-  voteDiv = createDiv();
-  voteDiv.id("vote");
-  
-  voteP = createP("Thank you for voting!");
-  voteP.id("voteP");
-  voteP.position(800, 425);
-  voteP.hide();
-
-  questionP = createP("Do you think this preset" + "<br>" + "contributes to the overall piece?");
-  questionP.id("questionP");
-  questionP.position(800, 415);
-  questionP.hide();
-    
-  yesButton = createButton("YES");
-  yesButton.id("yesVote");
-  yesButton.parent("vote");
-  yesButton.mousePressed(voting);
-  yesButton.position(800, 475);
-  yesButton.hide();
-  
-  noButton = createButton("NO");
-  noButton.id("noVote");
-  noButton.parent("vote");
-  noButton.mousePressed(voting);
-  noButton.position(850, 475);
-  noButton.hide();
-
-  /* Envelope Sliders */
-  attackSlider = createSlider(0.0, 0.25, 0.1, 0.001);
-  attackSlider.id("userAttack");
-  attackSlider.class('slider')
-  attackSlider.position(930, 100);
-  
-  decaySlider = createSlider(0.0, 1.0, 0.1, 0.001);
-  decaySlider.id("userDecay");
-  decaySlider.class('slider')
-  decaySlider.position(950, 100);
-  
-  sustainSlider = createSlider(0.0, 1.0, 0.1, 0.001);
-  sustainSlider.id("userSustain");
-  sustainSlider.class('slider')
-  sustainSlider.position(970, 100);
-  
-  releaseSlider = createSlider(0.1, 10.0, 0.1, 0.001);
-  releaseSlider.id("userRelease");
-  releaseSlider.class('slider')
-  releaseSlider.position(990, 100);
-
-  /* Input Fields */
-  pitchInput = createElement('textarea');
-  pitchInput.attribute("style", "height: 80px; width: 100px");
-  pitchInput.attribute("placeholder", "C4 D4 E4 F#4 G4 A4 B4 C5 D5 E5 Gb5 G5 A5 B5 C6 D6");
-  pitchInput.class("textareas")
-  pitchInput.id("pitchInput1")
-  pitchInput.position(930, 300)
-
-  pitchEnterButton = createButton("Enter<br> Pitch Scheme");
-  pitchEnterButton.mousePressed(yourPitchInput);
-  pitchEnterButton.class("enterbutton")
-  pitchEnterButton.id("pitchenter1")
-  pitchEnterButton.position(1040, 300)
-  
-  waveInput = createInput();
-  waveInput.class("inputs")
-  waveInput.attribute("placeholder", "ex. sine3 triangle square5 sawtooth16")
-  waveInput.id("waveinput1")
-  waveInput.position(930, 400)
-
-  waveEnterButton = createButton("Enter Your<br> Waveform");
-  waveEnterButton.mousePressed(yourWaveInput);
-  waveEnterButton.class("enterbutton")
-  waveEnterButton.id("waveenter1")
-  waveEnterButton.position(1080, 400)
-
-  /* Draw Sequencers */
-  strokeWeight(1);
-  mainSequencer.drawMatrix();
-  userSequencer.drawMatrix();
-
-  /* Declares Synths */
-  mainSynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
-  mainSynth.set({
-    'oscillator': {
-      'type': 'triangle'
-    },
-    'envelope': {
-      'attack': 0.005,
-      'decay': 0.1,
-      'sustain': 0.3,
-      'release': 1
-    },
-    'volume': -1.0,
-    'filter': {
-      'type': 'lowpass',
-      'frequency': 10,
-      'rolloff': -12,
-      'Q': 100,
-      'gain': 0
-    }
-  });
-
-  userSynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
-  userSynth.set({
-    'oscillator': {
-      'type': 'triangle'
-    },
-    'envelope': {
-      'attack': 0.005,
-      'decay': 0.1,
-      'sustain': 0.3,
-      'release': 1
-    },
-    'volume': -1.0,
-    'filter': {
-      'type': 'lowpass',
-      'frequency': 10,
-      'rolloff': -12,
-      'Q': 100,
-      'gain': 0
-    }
-  });
-  
-  ///////////////////////////////////////////////////////
-  /* what happens below is only created once */
-  ///////////////////////////////////////////////////////
   discordPanel = createElement("iframe")
   discordPanel.attribute("src", "https://discordapp.com/widget?id=578783270532284417&theme=dark");
   discordPanel.attribute("width", "300");
@@ -291,6 +300,7 @@ function setup() {
   discordPanel.position(width, discordYPos);
   
   redditA = createA("https://www.reddit.com/r/DemocraticBeatMaking/", "");
+  redditA.attribute("target", "_blank");
   redditA.id("redditLink")
   redditA.position(width - 70, 10)
   
@@ -334,23 +344,24 @@ function setup() {
 //          MAIN SONG LOOP         //
 /////////////////////////////////////
 function song(time) {
-  mainSynth.set({
-    'volume': (mainSequencer.polySeq[counter].length * -1.0) + mainVolumeSlider.value()
-  });
+  for(let sequencerIndex = 0; sequencerIndex < 3; sequencerIndex++){
+    mainSynth[sequencerIndex].set({
+      'volume': (mainSequencer[sequencerIndex].polySeq[counter].length * -1.0) + mainVolumeSlider[sequencerIndex].value()
+    });
 
-  userSynth.set({
-    'volume': (userSequencer.polySeq[counter].length * -1.0) + userVolumeSlider.value(),
-    'envelope': {
-      'attack': attackSlider.value(),
-      'decay': decaySlider.value(),
-      'sustain': sustainSlider.value(),
-      'release': releaseSlider.value()
-    }
-  });
-  
-  mainSynth.triggerAttackRelease(mainSequencer.polySeq[counter].filter(filterUndefined), '8n', time);
-
-  userSynth.triggerAttackRelease(userSequencer.polySeq[counter].filter(filterUndefined), '8n', time);
+    userSynth[sequencerIndex].set({
+      'volume': (userSequencer[sequencerIndex].polySeq[counter].length * -1.0) + userVolumeSlider[sequencerIndex].value(),
+      'envelope': {
+        'attack': attackSlider[sequencerIndex].value(),
+        'decay': decaySlider[sequencerIndex].value(),
+        'sustain': sustainSlider[sequencerIndex].value(),
+        'release': releaseSlider[sequencerIndex].value()
+      }
+    });
+    
+    mainSynth[sequencerIndex].triggerAttackRelease(mainSequencer[sequencerIndex].polySeq[counter].filter(filterUndefined), '8n', time);
+    userSynth[sequencerIndex].triggerAttackRelease(userSequencer[sequencerIndex].polySeq[counter].filter(filterUndefined), '8n', time);
+  }
 
   counter = (counter + 1) % 16;
 
@@ -461,17 +472,16 @@ class StepSequencer {
   //              CANVAS             //
   /////////////////////////////////////
   canvasPressed() {
-    this.mouseIsDragged = true;
     let rowClicked = floor(this.beatLength * (mouseY - this.yOffset) / this.lineEnd);
     let columnClicked = floor(this.beatLength * (mouseX - this.xOffset) / this.lineEnd);
 
+    this.mouseIsDragged = true;
 
     if (this.polyMatrix[rowClicked][columnClicked] === 1) {
       this.lastCellState = 1;
     } else if (this.polyMatrix[rowClicked][columnClicked] === 0) {
       this.lastCellState = 0;
     }
-
     cnv.mouseReleased = function() {
       this.mouseIsDragged = false;
     }
@@ -489,6 +499,7 @@ class StepSequencer {
       // console.log('You clicked row ' + rowClicked + ' and column ' + columnClicked);
       this.drawMatrix();
     }
+  
   }
   
     canvasReleased() {
@@ -521,16 +532,39 @@ class StepSequencer {
 /////////////////////////////////////
 
 function canvasPressed(){
-  userSequencer.canvasPressed()
- // mainSequencer.canvasPressed()
+  let sequencerIndex = 0
+  if(mouseY < 500){
+      sequencerIndex = 0
+  }else if (mouseY >= 500 && mouseY < 1000){
+    sequencerIndex = 1
+  }else if (mouseY >= 1000 && mouseY < height){
+    sequencerIndex = 2
+  }
+  userSequencer[sequencerIndex].canvasPressed()
 }
+
 function canvasMoved(){
-   userSequencer.canvasMoved()
- // mainSequencer.canvasMoved()
+  let sequencerIndex = 0
+  if(mouseY < 500){
+      sequencerIndex = 0
+  }else if (mouseY >= 500 && mouseY < 1000){
+    sequencerIndex = 1
+  }else if (mouseY >= 1000 && mouseY < height){
+    sequencerIndex = 2
+  }
+  userSequencer[sequencerIndex].canvasMoved()
 }
+
 function canvasReleased(){
-  userSequencer.canvasReleased()
- // mainSequencer.canvasReleased()
+  let sequencerIndex = 0
+  if(mouseY < 500){
+      sequencerIndex = 0
+  }else if (mouseY >= 500 && mouseY < 1000){
+    sequencerIndex = 1
+  }else if (mouseY >= 1000 && mouseY < height){
+    sequencerIndex = 2
+  }
+  userSequencer[sequencerIndex].canvasReleased()
 }
 
 /////////////////////////////////////
@@ -549,7 +583,13 @@ function setPresets() {
   let myID = event.srcElement.id;
   presetID = myID
 
-  let whichButton = {...userPresets[myID]};
+  let idArray = myID.split(" ")
+  let seqID = parseInt(idArray[0]) + 1
+  let preID = idArray[1]
+
+  console.log(seqID, preID)
+
+  let whichButton = {...userPresets[seqID][preID]};
 
   // deep clone an array of arrays
   let setSequence = whichButton.sequence.map(i => ([...i]));
@@ -561,13 +601,14 @@ function setPresets() {
   let setRelease = setEnvelope.release
 
   let setWaveform = whichButton.waveform;
+  waveform = setWaveform
   let setPitchScheme = whichButton.pitchArray;
   console.log(setPitchScheme)
   
-  userSequencer.polyMatrix = setSequence;
-  userSequencer.polyNotes = setPitchScheme;
+  userSequencer[seqID-1].polyMatrix = setSequence;
+  userSequencer[seqID-1].polyNotes = setPitchScheme;
 
-  userSynth.set({
+  userSynth[seqID-1].set({
     'oscillator': {
       'type': setWaveform
     },
@@ -579,31 +620,31 @@ function setPresets() {
     }
   });
 
-  attackSlider.value(setAttack);
-  decaySlider.value(setDecay);
-  sustainSlider.value(setSustain);
-  releaseSlider.value(setRelease);
+  attackSlider[seqID - 1].value(setAttack);
+  decaySlider[seqID - 1].value(setDecay);
+  sustainSlider[seqID - 1].value(setSustain);
+  releaseSlider[seqID - 1].value(setRelease);
   
-  userSequencer.drawMatrix();
-  userSequencer.polyMatrixNotes();
+  userSequencer[seqID - 1].drawMatrix();
+  userSequencer[seqID - 1].polyMatrixNotes();
 
   let placeholderString = setPitchScheme.toString();
-    let newPitchString = placeholderString.replace(/,/g, ' ')
-    pitchInput.attribute("placeholder", newPitchString)
+  let newPitchString = placeholderString.replace(/,/g, ' ')
+  pitchInput[seqID - 1].attribute("placeholder", newPitchString)
 
-    waveInput.attribute("placeholder", setWaveform)
+  waveInput[seqID - 1].attribute("placeholder", setWaveform)
   
   //When Votes selected
   if (whichButton.haveVoted === false){
-    yesButton.show();
-    noButton.show();
-    questionP.show();
-    voteP.hide();
+    yesButton[seqID - 1].show();
+    noButton[seqID - 1].show();
+    questionP[seqID - 1].show();
+    voteP[seqID - 1].hide();
   }else{
-    yesButton.hide();
-    noButton.hide();
-    questionP.hide();
-    voteP.show();
+    yesButton[seqID - 1].hide();
+    noButton[seqID - 1].hide();
+    questionP[seqID - 1].hide();
+    voteP[seqID - 1].show();
   }
 }
 
@@ -622,8 +663,10 @@ function selectPresets() {
 /////////////////////////////////////
 function changeColor(data){
   //Changes Color of Button
-  let index = parseInt(data.index)
-  let voteCount = parseInt(data.voteCount)
+ // debugger;
+  let sequencerIndex = parseInt(data.sequencerIndex);
+  let presetIndex = parseInt(data.presetIndex);
+  let voteCount = parseInt(data.voteCount);
 
   voteCountPercentage = voteCount/255
   console.log(voteCountPercentage)
@@ -636,11 +679,11 @@ function changeColor(data){
     greenColor = 255 - (255 * ((voteCountPercentage - 0.5) * 2))
   }
   let displayColor = '#' + redColor.toString(16) + greenColor.toString(16) + '00'
-  mainPresetButtons[index - 1].style('background-color', displayColor)
+  mainPresetButtons[sequencerIndex][presetIndex-1].style('background-color', displayColor)
 
   //Vote Procedure
   if (voteCount === 0){
-    let whichButton = {...mainPresets[index]};
+    let whichButton = {...mainPresets[sequencerIndex+1][presetIndex]};
 
     // deep clone an array of arrays
     let setSequence = whichButton.sequence.map(i => ([...i]));
@@ -654,7 +697,7 @@ function changeColor(data){
     let setWaveform = whichButton.waveform;
     let setPitchScheme = whichButton.pitchArray;
 
-    mainSynth.set({
+    mainSynth[sequencerIndex].set({
       'oscillator': {
         'type': setWaveform
       },
@@ -665,11 +708,11 @@ function changeColor(data){
         'release': setRelease
         }
     });
-    mainSequencer.polyMatrix = setSequence;
-    mainSequencer.polyNotes = setPitchScheme;
+    mainSequencer[sequencerIndex].polyMatrix = setSequence;
+    mainSequencer[sequencerIndex].polyNotes = setPitchScheme;
 
-    mainSequencer.drawMatrix();
-    mainSequencer.polyMatrixNotes();
+    mainSequencer[sequencerIndex].drawMatrix();
+    mainSequencer[sequencerIndex].polyMatrixNotes();
     console.log('changed!')
   }
     
@@ -681,8 +724,12 @@ function changeColor(data){
 /////////////////////////////////////
 
 function savePreset() {
-  userPresetLength = Object.keys(userPresets).length;
-  let newKey = userPresetLength + 1;
+  let myName = event.srcElement.id;
+  let splitName = myName.split(" ")
+  let seqID = parseInt(splitName[1]) + 1
+
+  userPresetLength[seqID] = Object.keys(userPresets[seqID]).length;
+  let newKey = userPresetLength[seqID] + 1;
   console.log(newKey);
   /*Preset in dictonary format 
   Loading it like this creates the new key*/
@@ -690,14 +737,15 @@ function savePreset() {
   let time = date.getTime();
 
   let newPreset = {
-      "sequence": userSequencer.polyMatrix,
+    "sequencerID": seqID, "preset" :{
+      "sequence": userSequencer[seqID -1].polyMatrix,
       "envelope":{
-        "attack": attackSlider.value(),
-        "decay": decaySlider.value(),
-        "sustain": sustainSlider.value(),
-        "release": releaseSlider.value(),
+        "attack": attackSlider[seqID-1].value(),
+        "decay": decaySlider[seqID-1].value(),
+        "sustain": sustainSlider[seqID-1].value(),
+        "release": releaseSlider[seqID-1].value(),
       },
-      "pitchArray": userSequencer.polyNotes,
+      "pitchArray": userSequencer[seqID-1].polyNotes,
       "waveform": waveform,
       "haveVoted": false,
       "votes": {
@@ -705,17 +753,18 @@ function savePreset() {
           "yes": 0,
           "no": 0
       } 
+    }
   };
 
   if (confirm("Would you like to save your presets?")) {
-    userPresets[newKey] = newPreset;
+    userPresets[seqID-1][newKey] = newPreset;
     socket.emit('userTrack1', newPreset);
   }
-  userPresetButtons[userPresetLength] = createButton(userPresetLength + 1);
+  userPresetButtons[seqID - 1][userPresetLength] = createButton(userPresetLength + 1);
  // presetButtons[presetLength].position(presetLength * 30, 0)
- userPresetButtons[userPresetLength].id(userPresetLength + 1);
- userPresetButtons[userPresetLength].mousePressed(setPresets);
-  userPresetButtons[userPresetLength].parent("userDropdown-content");
+ userPresetButtons[seqID - 1][userPresetLength].id(userPresetLength + 1);
+ userPresetButtons[seqID - 1][userPresetLength].mousePressed(setPresets);
+  userPresetButtons[seqID - 1][userPresetLength].parent("userDropdown-content");
   Tone.context.resume();
 }
 
@@ -723,26 +772,30 @@ function savePreset() {
 //             VOTING              //
 /////////////////////////////////////
 function voting(){
-  let whichButton = userPresets[presetID]
+  let idArray = presetID.split(" ")
+  let seqID = parseInt(idArray[0]) + 1
+  let preID = idArray[1]
+  let whichButton = userPresets[seqID][preID]
   let whichVote = event.srcElement.id
+  whichVote = whichVote.replace(/[0-9]/g, '');
   console.log(whichVote);
 
-  let sendVote = {index: presetID, vote: whichVote}
+  let sendVote = {sequencerIndex: seqID, presetIndex: preID, vote: whichVote}
   
  if(whichVote === "yesVote"){
    whichButton.haveVoted = true
-   yesButton.hide();
-   noButton.hide();
-   questionP.hide();
-   voteP.show();
+   yesButton[seqID - 1].hide();
+   noButton[seqID - 1].hide();
+   questionP[seqID - 1].hide();
+   voteP[seqID - 1].show();
    socket.emit('userVotingTrack1', sendVote);
  }
   if(whichVote === "noVote"){
     whichButton.haveVoted = true
-    yesButton.hide();
-    noButton.hide();
-    questionP.hide();
-    voteP.show();
+    yesButton[seqID - 1].hide();
+    noButton[seqID - 1].hide();
+    questionP[seqID - 1].hide();
+    voteP[seqID - 1].show();
      socket.emit('userVotingTrack1', sendVote);
   }
 }
@@ -751,7 +804,11 @@ function voting(){
 //           TEST INPUTS           //
 /////////////////////////////////////
 function yourPitchInput(){
-  let myValue = pitchInput.value()
+  let myID = event.srcElement.id;
+  myID = myID.split(" ")
+  myID = parseInt(myID[1])
+  console.log(myID)
+  let myValue = pitchInput[myID].value()
   
   //turns input value into an array
   let splitValue = myValue.split(" ");
@@ -770,12 +827,12 @@ function yourPitchInput(){
       pitchArray.push(splitValue[i]);
     }
     console.log(pitchArray)
-    userSequencer.polyNotes = pitchArray;
-    userSequencer.polyMatrixNotes();
+    userSequencer[myID].polyNotes = pitchArray;
+    userSequencer[myID].polyMatrixNotes();
 
     let placeholderString = pitchArray.toString();
     let newString = placeholderString.replace(/,/g, ' ')
-    pitchInput.attribute("placeholder", newString)
+    pitchInput[myID].attribute("placeholder", newString)
   }else if (splitValue.length != 16 || regTests === false){
     alert("You must have sixteen notes in this format:\nB5 C6 D3 F3 . . .")
   }
@@ -783,7 +840,11 @@ function yourPitchInput(){
 }
 
 function yourWaveInput(){
-  let myValue = waveInput.value()
+  let myID = event.srcElement.id;
+  myID = myID.split(" ")
+  myID = parseInt(myID[1])
+  console.log(myID)
+  let myValue = waveInput[myID].value()
   
   //regexp to test waveform
   let reg = /^(sine|triangle|square|sawtooth)(1)?(\d)?$/
@@ -795,8 +856,8 @@ function yourWaveInput(){
   
   if(regTest){
     waveform = myValue
-    waveInput.attribute("placeholder", waveform)
-    userSynth.set({
+    waveInput[myID].attribute("placeholder", waveform)
+    userSynth[myID].set({
       'oscillator': {
         'type': waveform
       }

@@ -66,7 +66,8 @@ canvas {
   display: block;
 }
 
-#savebtn {
+
+.savebtn {
   background-color: #85b1f7;
   color: white;
   padding: 16px;
@@ -76,9 +77,21 @@ canvas {
 }
 
 /* Show the dropdown menu on hover */
-#userDropdown:hover #userDropdown-content {
+#userDropdown0:hover #userDropdown-content0 {
   display: block;
 }
-#mainDropdown:hover #mainDropdown-content {
+#mainDropdown0:hover #mainDropdown-content0 {
+  display: block;
+}
+#userDropdown1:hover #userDropdown-content1 {
+  display: block;
+}
+#mainDropdown1:hover #mainDropdown-content1 {
+  display: block;
+}
+#userDropdown2:hover #userDropdown-content2 {
+  display: block;
+}
+#mainDropdown2:hover #mainDropdown-content2 {
   display: block;
 }

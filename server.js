@@ -4,84 +4,93 @@ let fs = require('fs');
 let data = fs.readFileSync('./userPresets.json');
 let words = JSON.parse(data);
 
-
 let mainData = fs.readFileSync('./mainPresets.json');
 let mainWords = JSON.parse(mainData);
 
-let mainDataSpamVotes = [];
-let oldDataLength = Object.keys(mainData).length;
+/* parse out main data */
+let mainDataSpamVotes = [[], [], []];
+let mainDataLength = Object.keys(mainWords).length;
 
-for(let i = 0; i < oldDataLength; i++){
-    mainDataSpamVotes.push(0);
+let mainDataOldPresetLengths = []
+
+for(let i = 1; i <= mainDataLength; i++){
+    let mainPresetAmount = Object.keys(mainWords[i]).length;
+    mainDataOldPresetLengths.push(mainPresetAmount)
+    for(let j =0; j < mainPresetAmount; j++){
+    mainDataSpamVotes[i-1].push(0);
+    }
 }
-
-/* check presets every 5 minutes */
+console.log(mainDataOldPresetLengths)
+/* check user presets every 5 minutes for votes*/
 setInterval(function(){
-    let userPresetsLength = Object.keys(words).length;
     let oldWords = words;
+
+    for(let seqIndex = 1; seqIndex<=3; seqIndex++){
+        let userPresetsLength = Object.keys(words[seqIndex]).length
     
-    for(let i = 4; i <= userPresetsLength; i++){
-        let myPreset = oldWords[i];
-        console.log(myPreset.votes)
-        let currentTime = new Date().getTime()
-        let endTime = myPreset.votes.date + (1000 * 60 * 60 * 24)
+        for(let presetIndex = 4; presetIndex <= userPresetsLength; presetIndex++){
+            let myPreset = oldWords[seqIndex][presetIndex];
+            console.log(myPreset.votes)
+            let currentTime = new Date().getTime()
+            let endTime = myPreset.votes.date + (1000 * 60 * 60 * 24)
 
-        /* if 24 hours since last save has passed, check votes */
-        if (currentTime > endTime){
-            let yesVotes = myPreset.votes.yes
-            let noVotes = myPreset.votes.no
+            /* if 24 hours since last save has passed, check votes */
+            if (currentTime > endTime){
+                let yesVotes = myPreset.votes.yes
+                let noVotes = myPreset.votes.no
 
-            if(yesVotes > noVotes){
-                fs.readFile('./mainPresets.json', addToMain)
-        
-                function addToMain(err, oldData){
-                    let json = JSON.parse(oldData)
-                    let newKey = Object.keys(json).length + 1
-                   
-                    json[newKey] = myPreset
-                    mainWords = json
-                // console.log(json)
-                    newJSON = JSON.stringify(json, null, 2)
-                    fs.writeFile('./mainPresets.json', newJSON, finished)
+                //if preset won after 24 hours, send user preset to main and delete
+                if(yesVotes > noVotes){
+                    fs.readFile('./mainPresets.json', addToMain)
+            
+                    function addToMain(err, oldData){
+                        let json = JSON.parse(oldData)
+                        let newKey = Object.keys(json).length + 1
                     
-                    function finished(err){
-                        console.log('got it!')
+                        json[seqIndex][newKey] = myPreset
+                        mainWords = json
+                    // console.log(json)
+                        newJSON = JSON.stringify(json, null, 2)
+                        fs.writeFile('./mainPresets.json', newJSON, finished)
+                        
+                        function finished(err){
+                            console.log('got it!')
+                        }
+                    };
+                    fs.readFile('./userPresets.json', presetDelete)
+            
+                    function presetDelete(err, oldData){
+                        let json = JSON.parse(oldData)
+                        delete json[seqIndex][presetIndex];
+                    // console.log(json)
+                        words = json
+                        newJSON = JSON.stringify(json, null, 2)
+                        fs.writeFile('./userPresets.json', newJSON, finished)
+                        
+                        function finished(err){
+                            console.log('Deleted preset ' + myPreset + " from UserPresets. Preset won! Added to Main!")
+                        }
                     }
-                };
-                fs.readFile('./userPresets.json', presetDelete)
-        
-                function presetDelete(err, oldData){
-                    let json = JSON.parse(oldData)
-                    delete json[i];
-                // console.log(json)
-                    words = json
-                    newJSON = JSON.stringify(json, null, 2)
-                    fs.writeFile('./userPresets.json', newJSON, finished)
-                    
-                    function finished(err){
-                        console.log('Deleted preset ' + myPreset + " from UserPresets. Preset won! Added to Main!")
+                }else if (noVotes >= yesVotes){
+                    fs.readFile('./userPresets.json', presetDelete)
+            
+                    function presetDelete(err, oldData){
+                        let json = JSON.parse(oldData)
+                        delete json[seqIndex][presetIndex];
+                    // console.log(json)
+                        words = json
+                        newJSON = JSON.stringify(json, null, 2)
+                        fs.writeFile('./userPresets.json', newJSON, finished)
+                        
+                        function finished(err){
+                            console.log('Deleted preset ' + myPreset + " from UserPresets. Preset lost")
+                        }
                     }
-                }
-            }else if (noVotes >= yesVotes){
-                fs.readFile('./userPresets.json', presetDelete)
-        
-                function presetDelete(err, oldData){
-                    let json = JSON.parse(oldData)
-                    delete json[i];
-                // console.log(json)
-                    words = json
-                    newJSON = JSON.stringify(json, null, 2)
-                    fs.writeFile('./userPresets.json', newJSON, finished)
-                    
-                    function finished(err){
-                        console.log('Deleted preset ' + myPreset + " from UserPresets. Preset lost")
-                    }
-                }
 
-                }
+                    }
             }
     }
-    
+}
 }, 1000 * 60 * 60 * 24)
 
 /*--------acceses express and listens on the localport--------*/
@@ -123,14 +132,15 @@ function newConnection(socket){
     socket.on('userVotingTrack1', votePreset);
     
     function savePreset(data){
-        let newPreset = data
+        let newPreset = data.preset
+        let whichSeq = data.sequencerID
         fs.readFile('./userPresets.json', append)
         
         function append(err, oldData){
             let json = JSON.parse(oldData)
-            let newKey = Object.keys(json).length + 1
+            let newKey = Object.keys(json[whichSeq]).length + 1
             console.log(newPreset)
-            json[newKey] = newPreset
+            json[whichSeq][newKey] = newPreset
             words = json
            // console.log(json)
             newJSON = JSON.stringify(json, null, 2)
@@ -145,27 +155,33 @@ function newConnection(socket){
     }
 
     function selectPreset(data){
-        let whichButton = data
+        let dataArray = data.split(' ');
+        let seqID = parseInt(dataArray[0])
+        let whichButton = parseInt(dataArray[1])
+        
 
-        if(oldDataLength < Object.keys(mainData).length){
-            oldDataLength = Object.keys(mainData).length
-            mainDataSpamVotes.push(0)
+        if(mainDataOldPresetLengths[seqID] < Object.keys(mainWords[seqID + 1]).length){
+            mainDataOldPresetLengths[seqID] = Object.keys(mainWords[seqID + 1]).length
+            mainDataSpamVotes[seqID].push(0)
             }
         
-        mainDataSpamVotes[whichButton] += 10;
+        mainDataSpamVotes[seqID][whichButton -1] += 10;
+        console.log(mainDataSpamVotes)
 
-        if(mainDataSpamVotes[whichButton] >= 255){
-            mainDataSpamVotes[whichButton] = 0 
+        if(mainDataSpamVotes[seqID][whichButton-1] >= 255){
+            mainDataSpamVotes[seqID][whichButton-1] = 0 
             }
 
-        let buttonVote = {index: whichButton, voteCount: mainDataSpamVotes[whichButton]}
+        let buttonVote = {sequencerIndex: seqID, presetIndex: whichButton, voteCount: mainDataSpamVotes[seqID][whichButton-1]}
+        console.log(buttonVote)
         //need to track number of votes for preset here,
         //send votes with index number
         io.emit('mainTrack1', buttonVote)
     }
 
     function votePreset(data){
-        let whichPreset = data.index;
+        let whichSeq = data.sequencerIndex;
+        let whichPreset = data.presetIndex;
         let whichVote = data.vote;
 
         fs.readFile('./userPresets.json', append)
@@ -174,9 +190,9 @@ function newConnection(socket){
         function append(err, oldData){
             let json = JSON.parse(oldData)
             if(whichVote === "yesVote"){
-                json[whichPreset].votes.yes += 1
+                json[whichSeq][whichPreset].votes.yes += 1
              }else if(whichVote === "noVote"){
-                json[whichPreset].votes.no +=1
+                json[whichSeq][whichPreset].votes.no +=1
              }
             
             words = json
