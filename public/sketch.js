@@ -110,7 +110,8 @@ function setup() {
     userPresetDropdownContentDiv.parent("userDropbtn" + sequencerIndex);
 
     for (let i = 0; i < userPresetLength[sequencerIndex]; i++) {
-      let seqIndexAndPresetIndex = sequencerIndex.toString() + " " + (i + 1)
+      let presetKeyArray = Object.keys(userPresets[sequencerIndex + 1])
+      let seqIndexAndPresetIndex = sequencerIndex.toString() + " " + presetKeyArray[i]
       userPresetButtons[sequencerIndex][i] = createButton(seqIndexAndPresetIndex);
     //  userPresetButtons[i].position(i * 30, 0)
       userPresetButtons[sequencerIndex][i].id(seqIndexAndPresetIndex);
@@ -576,11 +577,29 @@ function filterUndefined(value) {
   return value !== undefined;
 }
 
+/////////////////////////////////////
+//       Returns Missing Key       //
+/////////////////////////////////////
+function returnMissingKey(array){
+  let newArray = []
+  for(let i = 0; i< array.length; i++){
+    newArray.push(parseInt(array[i]))
+  }
+  for(let i = 0; i< array.length - 1; i++){
+   if(newArray[i+1] - newArray[i] != 1){
+     let missingIndex = newArray[i] + 1
+     return missingIndex;
+   }
+  }
+  let nextKey = newArray.length + 1
+  return nextKey
+}
 
 /////////////////////////////////////
 //       SETS PRESETS FOR USER     //
 /////////////////////////////////////
 function setPresets() {
+
   //check the buttons id, whatever id it has is the preset it needs to select
   let myID = event.srcElement.id;
   presetID = myID
@@ -665,7 +684,6 @@ function selectPresets() {
 /////////////////////////////////////
 function changeColor(data){
   //Changes Color of Button
- // debugger;
   let sequencerIndex = parseInt(data.sequencerIndex);
   let presetIndex = parseInt(data.presetIndex);
   let voteCount = parseInt(data.voteCount);
@@ -730,8 +748,9 @@ function savePreset() {
   let splitName = myName.split(" ")
   let seqID = parseInt(splitName[1]) + 1
 
-  userPresetLength[seqID] = Object.keys(userPresets[seqID]).length;
-  let newKey = userPresetLength[seqID] + 1;
+   userPresetLength[seqID - 1] = Object.keys(userPresets[seqID]).length;
+  // let newKey = userPresetLength[seqID] + 1;
+  let newKey = returnMissingKey(Object.keys(userPresets[seqID]))
   console.log(newKey);
   /*Preset in dictonary format 
   Loading it like this creates the new key*/
@@ -759,14 +778,15 @@ function savePreset() {
   };
 
   if (confirm("Would you like to save your presets?")) {
-    userPresets[seqID-1][newKey] = newPreset;
+    userPresets[seqID][newKey] = newPreset.preset;
     socket.emit('userTrack1', newPreset);
   }
-  userPresetButtons[seqID - 1][userPresetLength] = createButton(userPresetLength + 1);
+  let newName = (seqID-1) + " " + newKey
+  userPresetButtons[seqID - 1][userPresetLength[seqID - 1]] = createButton(newName);
  // presetButtons[presetLength].position(presetLength * 30, 0)
- userPresetButtons[seqID - 1][userPresetLength].id(userPresetLength + 1);
- userPresetButtons[seqID - 1][userPresetLength].mousePressed(setPresets);
-  userPresetButtons[seqID - 1][userPresetLength].parent("userDropdown-content");
+ userPresetButtons[seqID - 1][userPresetLength[seqID - 1]].id(newName);
+ userPresetButtons[seqID - 1][userPresetLength[seqID - 1]].mousePressed(setPresets);
+  userPresetButtons[seqID - 1][userPresetLength[seqID - 1]].parent("userDropdown-content" + (seqID -1));
   Tone.context.resume();
 }
 
@@ -883,7 +903,6 @@ function regArrayTest(array, reg){
 //         DISCORD SCROLL          //
 /////////////////////////////////////
 function mouseWheel(event) {
-  print(event.delta);
   //move the square according to the vertical scroll amount
   discordYPos += event.delta;
   if(discordYPos > 1000){

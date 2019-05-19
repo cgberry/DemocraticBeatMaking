@@ -28,8 +28,10 @@ setInterval(function(){
 
     for(let seqIndex = 1; seqIndex<=3; seqIndex++){
         let userPresetsLength = Object.keys(words[seqIndex]).length
+        let presetKeyArray = Object.keys(words[seqIndex])
     
-        for(let presetIndex = 4; presetIndex <= userPresetsLength; presetIndex++){
+        for(let keyIndex = 3; keyIndex < userPresetsLength; keyIndex++){
+            let presetIndex = presetKeyArray[keyIndex]
             let myPreset = oldWords[seqIndex][presetIndex];
             console.log(myPreset.votes)
             let currentTime = new Date().getTime()
@@ -92,7 +94,7 @@ setInterval(function(){
             }
     }
 }
-}, 1000 * 60 * 10)
+}, 1000 * 60 * 1)
 
 /* every 10 seconds, the spam votes get reset to 0*/
 setInterval(function(){
@@ -149,7 +151,7 @@ function newConnection(socket){
         
         function append(err, oldData){
             let json = JSON.parse(oldData)
-            let newKey = Object.keys(json[whichSeq]).length + 1
+            let newKey = returnMissingKey(Object.keys(json[whichSeq]))
             console.log(newPreset)
             json[whichSeq][newKey] = newPreset
             words = json
@@ -177,14 +179,14 @@ function newConnection(socket){
             }
         
         mainDataSpamVotes[seqID][whichButton -1] += 10;
-        console.log(mainDataSpamVotes)
+      //  console.log(mainDataSpamVotes)
 
         if(mainDataSpamVotes[seqID][whichButton-1] >= 255){
             mainDataSpamVotes[seqID][whichButton-1] = 0 
             }
 
         let buttonVote = {sequencerIndex: seqID, presetIndex: whichButton, voteCount: mainDataSpamVotes[seqID][whichButton-1]}
-        console.log(buttonVote)
+       // console.log(buttonVote)
         //need to track number of votes for preset here,
         //send votes with index number
         io.emit('mainTrack1', buttonVote)
@@ -218,3 +220,18 @@ function newConnection(socket){
        
     }
 }
+
+function returnMissingKey(array){
+    let newArray = []
+    for(let i = 0; i< array.length; i++){
+      newArray.push(parseInt(array[i]))
+    }
+    for(let i = 0; i< array.length - 1; i++){
+     if(newArray[i+1] - newArray[i] != 1){
+       let missingIndex = newArray[i] + 1
+       return missingIndex;
+     }
+    }
+    console.log(newArray.length + 1)
+    return newArray.length + 1
+  }
