@@ -21,7 +21,7 @@ for(let i = 1; i <= mainDataLength; i++){
     }
 }
 console.log(mainDataOldPresetLengths)
-/* check user presets every 5 minutes for votes*/
+/* check user presets every 10 minutes for votes*/
 setInterval(function(){
     let oldWords = words;
 
@@ -91,7 +91,7 @@ setInterval(function(){
             }
     }
 }
-}, 1000 * 60 * 60 * 24)
+}, 1000 * 60 * 10)
 
 /*--------acceses express and listens on the localport--------*/
 let express = require('express');
