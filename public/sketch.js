@@ -295,8 +295,9 @@ function setup() {
 
   discordPanel = createElement("iframe")
   discordPanel.attribute("src", "https://discordapp.com/widget?id=578783270532284417&theme=dark");
-  discordPanel.attribute("width", "300");
-  discordPanel.attribute("height", "500");
+  discordPanel.attribute("width", "320");
+  discordPanel.attribute("height", "600");
+  discordPanel.attribute("frameborder", "0");
   discordPanel.id("discordpanel")
   discordPanel.position(width, discordYPos);
   

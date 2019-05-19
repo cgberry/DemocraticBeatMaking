@@ -10,6 +10,7 @@ let mainWords = JSON.parse(mainData);
 /* parse out main data */
 let mainDataSpamVotes = [[], [], []];
 let mainDataLength = Object.keys(mainWords).length;
+console.log(mainDataLength)
 
 let mainDataOldPresetLengths = []
 
@@ -101,7 +102,6 @@ setInterval(function(){
            mainDataSpamVotes[seqID-1][presetID] = 0;
        }
     }
-    console.log("reset! ", mainDataSpamVotes)
 }, 1000 * 10);
 
 /*--------acceses express and listens on the localport--------*/
