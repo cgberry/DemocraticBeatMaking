@@ -93,6 +93,17 @@ setInterval(function(){
 }
 }, 1000 * 60 * 10)
 
+/* every 10 seconds, the spam votes get reset to 0*/
+setInterval(function(){
+    for(let seqID = 1; seqID <= mainDataLength; seqID++){
+        let mainPresetAmount = Object.keys(mainWords[seqID]).length;
+       for(let presetID = 0; presetID < mainPresetAmount; presetID++){
+           mainDataSpamVotes[seqID-1][presetID] = 0;
+       }
+    }
+    console.log("reset! ", mainDataSpamVotes)
+}, 1000 * 10);
+
 /*--------acceses express and listens on the localport--------*/
 let express = require('express');
 

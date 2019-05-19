@@ -297,6 +297,7 @@ function setup() {
   discordPanel.attribute("src", "https://discordapp.com/widget?id=578783270532284417&theme=dark");
   discordPanel.attribute("width", "300");
   discordPanel.attribute("height", "500");
+  discordPanel.id("discordpanel")
   discordPanel.position(width, discordYPos);
   
   redditA = createA("https://www.reddit.com/r/DemocraticBeatMaking/", "");
@@ -884,8 +885,8 @@ function mouseWheel(event) {
   print(event.delta);
   //move the square according to the vertical scroll amount
   discordYPos += event.delta;
-  if(discordYPos > 700){
-   discordYPos = 700 
+  if(discordYPos > 1000){
+   discordYPos = 1000 
   }
   
   if(discordYPos < 0){
