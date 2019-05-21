@@ -33,7 +33,7 @@ setInterval(function(){
         for(let keyIndex = 3; keyIndex < userPresetsLength; keyIndex++){
             let presetIndex = presetKeyArray[keyIndex]
             let myPreset = oldWords[seqIndex][presetIndex];
-            console.log(myPreset.votes)
+            //console.log(myPreset.votes)
             let currentTime = new Date().getTime()
             let endTime = myPreset.votes.date + (1000 * 60 * 60 * 24)
 
@@ -48,7 +48,7 @@ setInterval(function(){
             
                     function addToMain(err, oldData){
                         let json = JSON.parse(oldData)
-                        let newKey = Object.keys(json).length + 1
+                        let newKey = Object.keys(json[seqIndex]).length + 1
                     
                         json[seqIndex][newKey] = myPreset
                         mainWords = json
@@ -57,7 +57,7 @@ setInterval(function(){
                         fs.writeFile('./mainPresets.json', newJSON, finished)
                         
                         function finished(err){
-                            console.log('got it!')
+                            console.log('Moved ' + seqIndex + ' ', presetIndex + ' to ' + seqIndex + ' ', newKey)
                         }
                     };
                     fs.readFile('./userPresets.json', presetDelete)
@@ -68,10 +68,10 @@ setInterval(function(){
                     // console.log(json)
                         words = json
                         newJSON = JSON.stringify(json, null, 2)
-                        fs.writeFile('./userPresets.json', newJSON, finished)
+                        fs.writeFileSync('./userPresets.json', newJSON, finished)
                         
                         function finished(err){
-                            console.log('Deleted preset ' + myPreset + " from UserPresets. Preset won! Added to Main!")
+                            console.log('Deleted preset ' + seqIndex + presetIndex + " from UserPresets. Preset won! Added to Main!")
                         }
                     }
                 }else if (noVotes >= yesVotes){
@@ -83,10 +83,10 @@ setInterval(function(){
                     // console.log(json)
                         words = json
                         newJSON = JSON.stringify(json, null, 2)
-                        fs.writeFile('./userPresets.json', newJSON, finished)
+                        fs.writeFileSync('./userPresets.json', newJSON, finished)
                         
                         function finished(err){
-                            console.log('Deleted preset ' + myPreset + " from UserPresets. Preset lost")
+                            console.log('Deleted preset ' + seqIndex + presetIndex + " from UserPresets. Preset lost")
                         }
                     }
 
