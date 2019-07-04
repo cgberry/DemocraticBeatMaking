@@ -7,3 +7,7 @@ You can visit DBM by visiting https://democraticbeatmaking.space (make sure you 
 Please keep in mind this website is in alpha. As such, there are more bugs to work out and functionality that is missing. If you would like to make feature requests or point out issues, please do so on the Issues tab!
 
 DBM will always and forever be free and open source! If you plan on making your own version of DBM, please link to this GitHub with my name in your project.
+
+
+### Workspace Example
+![alt text](https://i.imgur.com/CdUhm9k.png)
