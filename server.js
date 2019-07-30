@@ -110,7 +110,9 @@ setInterval(function(){
 let express = require('express');
 
 let app = express();
-let server = app.listen(8080);
+const PORT = process.env.PORT || 3000;
+
+let server = app.listen(PORT);
 
 /*--------acceses socket.io and displays website files--------*/
 let socket = require('socket.io');
