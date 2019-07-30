@@ -110,7 +110,7 @@ setInterval(function(){
 let express = require('express');
 
 let app = express();
-let server = app.listen(8080);
+let server = app.listen(80);
 
 /*--------acceses socket.io and displays website files--------*/
 let socket = require('socket.io');
